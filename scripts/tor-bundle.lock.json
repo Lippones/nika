@@ -1,0 +1,5 @@
+{
+  "_": "Versão e checksum fixados do Tor Expert Bundle. Atualize com `fetch-tor --update` depois de conferir a assinatura GPG. Ver docs/tor-bundle.md.",
+  "version": "15.0.19",
+  "sha256": "6ac067402c7b4a3dc37887ed3754b3914b67fdc220c966190683e9ccf91abf0f"
+}

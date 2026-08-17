@@ -1,0 +1,22 @@
+node_modules/
+dist/
+.vite/
+
+# Rust / Tauri
+src-tauri/target/
+src-tauri/gen/
+
+# Tor Expert Bundle: baixado por scripts/fetch-tor.ps1, nunca versionado
+# (ver docs/tor-bundle.md).
+src-tauri/resources/*
+!src-tauri/resources/.gitkeep
+
+# Ícones são gerados por `npm run icons`
+src-tauri/icons/*.png
+src-tauri/icons/*.ico
+
+# Config local do cargo (linker deste ambiente)
+src-tauri/.cargo/
+
+# Artefatos de release montados pela CI
+dist-release/
