@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Permissões da janela principal. A UI só fala com o core via comandos próprios; nenhum plugin é exposto direto ao webview.",
+  "description": "Permissões da janela principal. A UI só fala com o core via comandos próprios; a única exceção é o arrasto da janela sem moldura (start-dragging), que não tem equivalente em comando — minimizar e esconder passam por comandos.",
   "windows": ["main"],
-  "permissions": ["core:default"]
+  "permissions": ["core:default", "core:window:allow-start-dragging"]
 }

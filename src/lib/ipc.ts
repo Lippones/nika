@@ -47,6 +47,8 @@ const core = {
     invoke<DiscordStatus>("discord_uninstall", { closeDiscord, relaunch }),
   discordRelaunch: () => invoke<DiscordStatus>("discord_relaunch"),
   copyText: (text: string) => invoke<void>("copy_text", { text }),
+  hideWindow: () => invoke<void>("hide_window"),
+  minimizeWindow: () => invoke<void>("minimize_window"),
   quit: () => invoke<void>("quit"),
 };
 

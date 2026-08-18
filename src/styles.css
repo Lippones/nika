@@ -173,13 +173,14 @@ p {
   }
 }
 
-/* Barra de cabeçalho: quem emitiu o bilhete e em que estado ele está. */
+/* Barra de cabeçalho: quem emitiu o bilhete e em que estado ele está. Também é
+   a moldura da janela sem decoração — a faixa toda arrasta a janela. */
 .bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 14px;
+  padding: 8px 8px 8px 14px;
   background: var(--peek);
   border-bottom: 1px solid var(--line);
   font-size: 10px;
@@ -187,6 +188,24 @@ p {
   letter-spacing: var(--track);
   text-transform: uppercase;
   color: var(--t-nav);
+  user-select: none;
+}
+
+/* O arrasto (data-tauri-drag-region) só dispara quando o alvo do clique é a
+   própria barra. Os textos deixam o clique passar para ela; os botões, não. */
+.bar__brand,
+.bar__tools {
+  pointer-events: none;
+}
+
+.bar__tools {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bar__tools button {
+  pointer-events: auto;
 }
 
 .bar__state {
@@ -194,6 +213,48 @@ p {
   align-items: center;
   gap: 7px;
   color: var(--t-3);
+}
+
+/* Controles da janela: minimizar e fechar (= esconder na bandeja). */
+.wctl {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.wctl__btn {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--t-nav);
+  cursor: pointer;
+  transition:
+    background 140ms ease,
+    color 140ms ease;
+}
+
+.wctl__btn svg {
+  width: 12px;
+  height: 12px;
+  stroke: currentColor;
+  stroke-width: 1.2;
+  stroke-linecap: round;
+}
+
+.wctl__btn:hover {
+  background: var(--hover);
+  color: var(--t-base);
+}
+
+.wctl__btn:last-child:hover {
+  /* Fechar acende como a ação principal acende: pela inversão. */
+  background: var(--t-base);
+  color: var(--bg);
 }
 
 .dot {

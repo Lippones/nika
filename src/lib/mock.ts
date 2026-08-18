@@ -178,6 +178,8 @@ export const mockApi = {
   discordUninstall: async () => pushDiscord("off"),
   discordRelaunch: async () => discord,
   copyText: async () => undefined,
+  hideWindow: async () => undefined,
+  minimizeWindow: async () => undefined,
   quit: async () => undefined,
 };
 
