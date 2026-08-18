@@ -1,0 +1,2 @@
+O version.dll do shim (crate discord-shim) é gerado por scripts/build-shim.ps1 e
+copiado para cá antes do build. Não é versionado. Ver docs/discord-dll.md.

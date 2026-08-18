@@ -1,0 +1,36 @@
+# Isola do app principal: o `cargo` de src-tauri nunca deve tentar compilar o
+# shim junto. Ele é Windows-only (MSVC) e vira um recurso empacotado.
+[workspace]
+
+[package]
+name = "nika-discord-shim"
+version = "0.1.0"
+edition = "2021"
+# naked_functions estabilizou em 1.88.0; o app principal segue em 1.77.
+rust-version = "1.88"
+description = "version.dll proxy que injeta o proxy Tor no Discord (docs/discord-dll.md)"
+publish = false
+
+[lib]
+# No MSVC não há prefixo `lib`: o artefato sai como version.dll, que é o nome
+# que o loader do Discord procura no diretório do executável.
+name = "version"
+crate-type = ["cdylib"]
+
+[dependencies]
+retour = "0.3"
+windows-sys = { version = "0.59", features = [
+  "Win32_Foundation",
+  "Win32_System_LibraryLoader",
+  "Win32_System_SystemInformation",
+  "Win32_System_SystemServices",
+] }
+
+[profile.release]
+# Nunca fazer unwind pela fronteira FFI (UB). Um erro no init aborta a nossa
+# lógica, não desenrola a pilha do Discord.
+panic = "abort"
+opt-level = "s"
+strip = true
+lto = true
+codegen-units = 1

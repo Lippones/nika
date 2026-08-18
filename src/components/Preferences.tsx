@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 
-import { Card } from "./Card";
+import { Band } from "./Band";
 import type { Config } from "../lib/types";
 
-interface SettingsCardProps {
+interface PreferencesProps {
   config: Config;
   saving: boolean;
   error: string | null;
@@ -13,12 +13,12 @@ interface SettingsCardProps {
 type PortField = "socksPort" | "httpPort" | "controlPort";
 
 const PORT_FIELDS: Array<{ key: PortField; label: string; hint: string }> = [
-  { key: "socksPort", label: "SOCKS5", hint: "porta que os apps usam" },
-  { key: "httpPort", label: "HTTP", hint: "para clientes sem suporte a SOCKS" },
-  { key: "controlPort", label: "Control", hint: "uso interno do Nika" },
+  { key: "socksPort", label: "SOCKS5", hint: "apps apontam aqui" },
+  { key: "httpPort", label: "HTTP", hint: "clientes sem socks" },
+  { key: "controlPort", label: "Control", hint: "uso interno" },
 ];
 
-export function SettingsCard({ config, saving, error, onSave }: SettingsCardProps) {
+export function Preferences({ config, saving, error, onSave }: PreferencesProps) {
   // Rascunho local: portas só valem quando o usuário confirma; os toggles são
   // aplicados na hora, que é o que se espera de um switch.
   const [draft, setDraft] = useState(config);
@@ -33,11 +33,11 @@ export function SettingsCard({ config, saving, error, onSave }: SettingsCardProp
   }
 
   return (
-    <Card title="Configurações">
+    <Band label="Preferências">
       <div className="ports">
         {PORT_FIELDS.map(({ key, label, hint }) => (
-          <label key={key}>
-            <span>{label}</span>
+          <label key={key} className="port">
+            <span className="port__label">{label}</span>
             <input
               type="number"
               min={1024}
@@ -47,7 +47,7 @@ export function SettingsCard({ config, saving, error, onSave }: SettingsCardProp
                 setDraft({ ...draft, [key]: Number(event.target.value) })
               }
             />
-            <small>{hint}</small>
+            <span className="port__hint">{hint}</span>
           </label>
         ))}
       </div>
@@ -56,38 +56,45 @@ export function SettingsCard({ config, saving, error, onSave }: SettingsCardProp
         <div className="actions">
           <button
             type="button"
-            className="primary"
+            className="solid"
             disabled={saving}
             onClick={() => onSave(draft)}
           >
-            {saving ? "Salvando…" : "Aplicar portas"}
+            {saving ? "Salvando…" : "Salvar portas"}
           </button>
           <button type="button" className="ghost" onClick={() => setDraft(config)}>
             Descartar
           </button>
-          <span className="muted">Reinicia o Tor se ele estiver no ar.</span>
+          <span className="port__hint">Reinicia o Tor se ele estiver no ar</span>
         </div>
       )}
 
-      <label className="switch">
-        <input
-          type="checkbox"
-          checked={draft.autostart}
-          onChange={(event) => toggle("autostart", event.target.checked)}
-        />
-        <span>Iniciar com o Windows</span>
-      </label>
+      <div className="switches">
+        <label className="switch">
+          <span>Iniciar com o Windows</span>
+          <input
+            type="checkbox"
+            checked={draft.autostart}
+            onChange={(event) => toggle("autostart", event.target.checked)}
+          />
+        </label>
 
-      <label className="switch">
-        <input
-          type="checkbox"
-          checked={draft.autoConnect}
-          onChange={(event) => toggle("autoConnect", event.target.checked)}
-        />
-        <span>Conectar automaticamente ao abrir</span>
-      </label>
+        <label className="switch">
+          <span>Conectar ao abrir</span>
+          <input
+            type="checkbox"
+            checked={draft.autoConnect}
+            onChange={(event) => toggle("autoConnect", event.target.checked)}
+          />
+        </label>
+      </div>
 
-      {error && <p className="alert">{error}</p>}
-    </Card>
+      {error && (
+        <p className="notice">
+          <strong>As preferências não foram salvas</strong>
+          {error}
+        </p>
+      )}
+    </Band>
   );
 }

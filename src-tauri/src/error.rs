@@ -31,6 +31,18 @@ pub enum Error {
     #[error("configuração inválida: {0}")]
     InvalidConfig(String),
 
+    #[error("não encontrei o Discord instalado neste usuário")]
+    DiscordNotFound,
+
+    #[error("o Discord está aberto — feche-o para continuar")]
+    DiscordRunning,
+
+    #[error("o componente do proxy do Discord (version.dll) não foi incluído neste build")]
+    ShimMissing,
+
+    #[error("não consegui gravar em: {paths}")]
+    DiscordWriteFailed { paths: String },
+
     #[error("erro de E/S: {0}")]
     Io(#[from] std::io::Error),
 

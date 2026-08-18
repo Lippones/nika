@@ -26,6 +26,48 @@ export interface Config {
   controlPort: number;
   autostart: boolean;
   autoConnect: boolean;
+  discord: DiscordConfig;
+  /** A janela de boas-vindas já foi concluída. `false` → a UI abre no onboarding. */
+  onboarded: boolean;
+}
+
+export interface DiscordConfig {
+  mode: DiscordMode;
+  reapplyOnStart: boolean;
+  allowClose: boolean;
+}
+
+/** Espelha `discord::Mode`. `torHttp` é o padrão — ver docs/discord-proxy.md D-03. */
+export type DiscordMode = "off" | "torHttp" | "torSocks";
+
+/** Espelha `discord::Component`. */
+export type DiscordComponent = "missing" | "ready";
+
+export interface DiscordAppDir {
+  path: string;
+  version: string;
+  installed: boolean;
+  proxy: string | null;
+}
+
+export interface DiscordInstall {
+  flavor: "stable" | "canary" | "ptb";
+  label: string;
+  baseDir: string;
+  exeName: string;
+  updateExe: string | null;
+  appDirs: DiscordAppDir[];
+}
+
+export interface DiscordStatus {
+  component: DiscordComponent;
+  componentVersion: string | null;
+  installs: DiscordInstall[];
+  running: boolean;
+  /** Modo lido do disco, não o da config. */
+  effective: DiscordMode;
+  /** Instalado, mas apontando para porta diferente da atual. */
+  stale: boolean;
 }
 
 export interface Relay {
@@ -55,6 +97,15 @@ export const INITIAL_STATUS: TorStatus = {
   summary: "carregando…",
   error: null,
   attempt: 0,
+};
+
+export const INITIAL_DISCORD: DiscordStatus = {
+  component: "missing",
+  componentVersion: null,
+  installs: [],
+  running: false,
+  effective: "off",
+  stale: false,
 };
 
 /** Espelha `Phase::is_active` no core. */

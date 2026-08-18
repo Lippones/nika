@@ -223,6 +223,12 @@ j
 **Fase 3 — Avançado**
 RF-09, RF-16, RF-26. Perfis de configuração. Avaliar macOS/Linux e onion services.
 
+**Fase 4 — Proxy no Discord**
+RF-27 a RF-41: instalar/remover o proxy no app do Discord a partir do Nika,
+detectando pastas, porta e processo em execução. Spec completa em
+[docs/discord-proxy.md](docs/discord-proxy.md). Depende de decisão sobre a
+licença do componente de terceiro (`discord-drover`).
+
 ## 12. Critérios de sucesso do MVP
 
 - Reboot do Windows → proxy funcional sem nenhum clique, em < 15s

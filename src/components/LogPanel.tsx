@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 
-import { Card } from "./Card";
+import { Band } from "./Band";
 import { useLogs } from "../hooks/useLogs";
 
 /** RF-17: as últimas linhas do tor, para diagnóstico. */
-export function LogCard() {
+export function LogPanel() {
   const lines = useLogs();
   const [open, setOpen] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
@@ -14,11 +14,11 @@ export function LogCard() {
   }, [lines, open]);
 
   return (
-    <Card
-      title="Log do Tor"
+    <Band
+      label="Log do Tor"
       action={
         <button type="button" className="ghost" onClick={() => setOpen(!open)}>
-          {open ? "Ocultar" : `Mostrar (${lines.length})`}
+          {open ? "Ocultar" : `Mostrar ${lines.length} linhas`}
         </button>
       }
     >
@@ -30,6 +30,6 @@ export function LogCard() {
           <div ref={endRef} />
         </div>
       )}
-    </Card>
+    </Band>
   );
 }

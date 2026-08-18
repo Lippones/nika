@@ -1,21 +1,92 @@
-/* Paleta e primitivos. A janela é pequena e sempre escura: um app de bandeja
-   não precisa competir com o tema do sistema. */
+/* ---------------------------------------------------------------------------
+   Nika — sistema visual
+
+   A janela é um bilhete técnico: um cartão com barra de cabeçalho, picote,
+   campos rotulados em caixa alta e um selo. Nada de cor de acento — a hierarquia
+   é feita de fios de 1px, entrelinha e uma única inversão (#F5F5F5 sobre
+   #191919) reservada à ação principal. Monoespaçada em tudo, porque tudo aqui é
+   dado técnico: portas, fingerprints, países, bytes. A Inter Tight aparece uma
+   única vez, no estado do proxy.
+--------------------------------------------------------------------------- */
+
+@font-face {
+  font-family: "JetBrains Mono Var";
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: block;
+  src: url("./fonts/jetbrains-mono-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "JetBrains Mono Var";
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: block;
+  src: url("./fonts/jetbrains-mono-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+    U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: "Inter Tight Var";
+  font-style: normal;
+  font-weight: 300 600;
+  font-display: block;
+  src: url("./fonts/inter-tight-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Inter Tight Var";
+  font-style: normal;
+  font-weight: 300 600;
+  font-display: block;
+  src: url("./fonts/inter-tight-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+    U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
 :root {
-  --bg: #0f1115;
-  --surface: #171a21;
-  --surface-strong: #1e222b;
-  --border: #272c37;
-  --text: #e6e8ee;
-  --muted: #8b93a5;
-  --brand: #a876d8;
-  --ok: #34d399;
-  --warn: #f59e0b;
-  --danger: #ef4444;
-  --radius: 10px;
+  /* Superfícies — o bilhete (#191919) precisa de um fundo mais fundo atrás
+     dele, senão não há bilhete: só parede. */
+  --void: #101010;
+  --bg: #191919;
+  --hover: #202020;
+  --peek: #232323;
+
+  /* Fios */
+  --line: #262626;
+  --line-strong: #3b3b3b;
+  --divider: #4b4b4b;
+
+  /* Texto */
+  --t-base: #f5f5f5;
+  --t-2: #d6d6d6;
+  --t-3: #c4c4c4;
+  --t-4: #a3a3a3;
+  --t-nav: #9a9a9a;
+  --t-faded: #767676;
+  --t-eyebrow: #6b6b6b;
+  --t-dim: #565656;
+
+  --mono: "JetBrains Mono Var", ui-monospace, "Cascadia Mono", "Consolas", monospace;
+  --display: "Inter Tight Var", "Inter Tight", "Segoe UI", system-ui, sans-serif;
+
+  /* Um bilhete é impresso: a caixa alta espaçada é o corpo do texto aqui. */
+  --track: 0.12em;
+  --radius: 3px;
 
   color-scheme: dark;
-  font-family: "Segoe UI", system-ui, sans-serif;
-  font-size: 14px;
+  font-family: var(--mono);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
 }
 
 * {
@@ -24,144 +95,325 @@
 
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--text);
+  background: var(--void);
+  color: var(--t-2);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+::selection {
+  background: var(--t-base);
+  color: var(--bg);
+}
+
+:focus-visible {
+  outline: 1px solid var(--t-base);
+  outline-offset: 2px;
+  border-radius: 1px;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border: 3px solid var(--void);
+  border-radius: 999px;
 }
 
 h1,
-h2 {
+h2,
+p {
   margin: 0;
 }
 
-h1 {
-  font-size: 1.15rem;
+/* Grão: o bilhete é impresso, não renderizado. Fica por cima de tudo, sem
+   interceptar clique. */
+.stage {
+  position: relative;
+  min-height: 100vh;
+  padding: 12px;
 }
 
-h2 {
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+.stage::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
+  background-size: 140px 140px;
+}
+
+/* O bilhete ------------------------------------------------------------------ */
+
+.ticket {
+  display: flex;
+  flex-direction: column;
+  max-width: 560px;
+  margin: 0 auto;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  animation: rise 460ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* Barra de cabeçalho: quem emitiu o bilhete e em que estado ele está. */
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--peek);
+  border-bottom: 1px solid var(--line);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: var(--track);
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--t-nav);
 }
 
-code {
-  font-family: "Cascadia Mono", "Consolas", monospace;
-  font-size: 0.85rem;
-}
-
-/* Layout ------------------------------------------------------------------ */
-
-.app {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-}
-
-.card {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 14px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-
-.card__header {
+.bar__state {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  color: var(--muted);
-  font-size: 0.8rem;
-}
-
-/* Estado ------------------------------------------------------------------ */
-
-.status__head {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.status__summary {
-  margin: 2px 0 0;
-  color: var(--muted);
-  font-size: 0.82rem;
+  gap: 7px;
+  color: var(--t-3);
 }
 
 .dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
+  width: 5px;
+  height: 5px;
   flex: none;
-  background: var(--muted);
+  border-radius: 50%;
+  background: var(--t-dim);
 }
 
 .dot--connected {
-  background: var(--ok);
-  box-shadow: 0 0 0 4px rgb(52 211 153 / 0.15);
+  background: var(--t-base);
 }
 
 .dot--starting,
 .dot--bootstrapping,
 .dot--retrying {
-  background: var(--warn);
-  animation: pulse 1.4s ease-in-out infinite;
+  background: var(--t-2);
+  animation: breathe 1.6s ease-in-out infinite;
 }
 
 .dot--failed {
-  background: var(--danger);
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--t-base);
 }
 
-@keyframes pulse {
+@keyframes breathe {
   50% {
-    opacity: 0.35;
+    opacity: 0.2;
   }
 }
 
-.badge {
-  margin-left: auto;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: rgb(52 211 153 / 0.15);
-  color: var(--ok);
-  font-size: 0.75rem;
-}
-
-.progress {
+/* Talão: a parte de cima do bilhete, centrada como num ingresso. */
+.stub {
   position: relative;
-  height: 20px;
-  background: var(--surface-strong);
-  border-radius: 999px;
-  overflow: hidden;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-height: 232px;
+  padding: 32px 20px 22px;
+  text-align: center;
 }
 
-.progress__bar {
-  height: 100%;
-  background: linear-gradient(90deg, var(--brand), var(--ok));
-  transition: width 240ms ease;
-}
-
-.progress__label {
+/* Imagem de fundo do talão: entra por cima do #191919 e se dissolve antes do
+   picote, para o texto nunca disputar com ela. Troque
+   `src/assets/backdrop.jpg` para mudar a cena. */
+.stub__backdrop {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-items: center;
-  font-size: 0.72rem;
+  z-index: -1;
+  background: url("./assets/backdrop.jpg") 16% 58% / cover no-repeat;
+  opacity: 0.55;
+  /* A cena é escura de propósito; sem esse ganho ela desaparece no cartão. */
+  filter: grayscale(1) contrast(1.3) brightness(1.32);
+  transition: opacity 900ms ease;
+  /* Vinheta que dissolve a cena nas bordas do cartão, seja qual for a imagem. */
+  box-shadow: inset 0 0 70px 34px var(--bg);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 42%, rgb(0 0 0 / 0.3) 74%, transparent 100%);
+}
+
+.stub__eyebrow {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--t-nav);
+}
+
+.stub__title {
+  font-family: var(--display);
+  font-size: clamp(30px, 8.4vw, 44px);
+  font-weight: 600;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: var(--t-base);
+}
+
+/* A segunda metade da frase recua: o estado se lê antes da frase inteira. */
+.stub__title span {
+  color: var(--t-faded);
+}
+
+.stub__est {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--t-4);
+}
+
+.stub__lead {
+  max-width: 34ch;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--t-faded);
+}
+
+/* Picote: onde o bilhete se dobra. */
+.perf {
+  height: 0;
+  border-top: 1px dashed var(--line-strong);
+  opacity: 0.85;
+}
+
+/* Campos -------------------------------------------------------------------- */
+
+.band {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--line);
+}
+
+.band:first-of-type {
+  border-top: none;
+}
+
+.band__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 16px;
+}
+
+.label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: var(--track);
+  text-transform: uppercase;
+  color: var(--t-eyebrow);
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 0;
+  border-top: 1px dotted var(--line);
+}
+
+.row:first-child {
+  border-top: none;
+}
+
+.row__key {
+  width: 74px;
+  flex: none;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: var(--track);
+  text-transform: uppercase;
+  color: var(--t-eyebrow);
+}
+
+.row__value {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--t-2);
+}
+
+.row__value--strong {
+  color: var(--t-base);
+}
+
+/* Medidor de bootstrap: células, como um bilhete picotado em pedaços iguais. */
+.meter {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.meter__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 10px;
+  letter-spacing: var(--track);
+  text-transform: uppercase;
+  color: var(--t-eyebrow);
+}
+
+.meter__value {
+  color: var(--t-3);
   font-variant-numeric: tabular-nums;
 }
 
-/* Botões ------------------------------------------------------------------ */
+.meter__cells {
+  display: flex;
+  gap: 2px;
+}
+
+.meter__cell {
+  flex: 1;
+  height: 8px;
+  background: var(--line);
+  transition: background 260ms ease;
+}
+
+.meter__cell--on {
+  background: var(--t-base);
+}
+
+/* Botões -------------------------------------------------------------------- */
 
 .actions {
   display: flex;
@@ -171,228 +423,607 @@ code {
 }
 
 button {
-  padding: 7px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface-strong);
-  color: var(--text);
-  font: inherit;
-  font-size: 0.85rem;
+  padding: 8px 13px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--t-3);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: var(--track);
+  text-transform: uppercase;
   cursor: pointer;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
 }
 
 button:hover:not(:disabled) {
-  border-color: var(--brand);
+  background: var(--hover);
+  border-color: var(--divider);
+  color: var(--t-base);
 }
 
 button:disabled {
-  opacity: 0.45;
+  border-color: var(--line);
+  color: var(--t-dim);
   cursor: default;
 }
 
-button.primary {
-  background: var(--brand);
-  border-color: var(--brand);
-  color: #14101c;
+/* A única inversão do bilhete. */
+button.solid {
+  background: var(--t-base);
+  border-color: var(--t-base);
+  color: var(--bg);
   font-weight: 600;
 }
 
+button.solid:hover:not(:disabled) {
+  background: var(--t-2);
+  border-color: var(--t-2);
+  color: var(--bg);
+}
+
+button.solid:disabled {
+  background: var(--peek);
+  border-color: var(--line);
+  color: var(--t-dim);
+}
+
 button.ghost {
+  padding: 2px 0;
+  border-color: transparent;
+  background: none;
+  color: var(--t-nav);
+}
+
+button.ghost:hover:not(:disabled) {
   background: none;
   border-color: transparent;
-  color: var(--muted);
-  padding: 4px 8px;
+  color: var(--t-base);
 }
 
-button.ghost:hover {
-  color: var(--text);
+button.copy {
+  width: 76px;
+  flex: none;
+  padding: 6px 0;
+  border-color: transparent;
+  color: var(--t-nav);
+  text-align: right;
 }
 
-/* Proxy ------------------------------------------------------------------- */
+button.copy:hover:not(:disabled) {
+  background: none;
+  border-color: transparent;
+  color: var(--t-base);
+}
 
-.endpoints {
+/* Circuito ------------------------------------------------------------------ */
+
+/* Guarda, meio e saída são uma sequência de verdade: a ordem é a informação.
+   O trilho à esquerda desenha o caminho; o quadrado cheio é a saída, o único
+   salto que o mundo vê. */
+.hops {
   display: flex;
   flex-direction: column;
-  gap: 8px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.endpoints li {
+.hop {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  padding: 8px 0 8px 18px;
 }
 
-.endpoints__label {
-  width: 56px;
-  color: var(--muted);
-  font-size: 0.75rem;
+.hop::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--line-strong);
 }
 
-.endpoints code {
+.hop:first-child::before {
+  top: 50%;
+}
+
+.hop:last-child::before {
+  bottom: 50%;
+}
+
+.hop::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  margin-top: -2.5px;
+  background: var(--bg);
+  box-shadow: inset 0 0 0 1px var(--divider);
+}
+
+.hop--exit::after {
+  background: var(--t-base);
+  box-shadow: none;
+}
+
+.hop__role {
+  width: 62px;
+  flex: none;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: var(--track);
+  text-transform: uppercase;
+  color: var(--t-eyebrow);
+}
+
+.hop__name {
   flex: 1;
-  padding: 6px 8px;
-  background: var(--surface-strong);
-  border-radius: 6px;
-  overflow-x: auto;
-  white-space: nowrap;
-}
-
-/* Circuito ---------------------------------------------------------------- */
-
-.circuit {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.circuit li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.circuit__hop {
-  display: grid;
-  place-items: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--surface-strong);
-  color: var(--muted);
-  font-size: 0.7rem;
-}
-
-.circuit__name {
-  flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-size: 13px;
+  color: var(--t-2);
 }
 
-.circuit__country {
-  color: var(--muted);
-  font-size: 0.78rem;
-  font-variant: small-caps;
+.hop__cc {
+  flex: none;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: var(--t-nav);
 }
 
-.pill {
-  padding: 3px 8px;
-  border-radius: 999px;
-  font-size: 0.78rem;
+/* Código de barras: as barras são o fingerprint do relay de saída, não enfeite.
+   Cada dígito hexadecimal vira uma barra com largura e tom próprios. */
+.barcode {
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  height: 26px;
+  overflow: hidden;
 }
 
-.pill--ok {
-  background: rgb(52 211 153 / 0.15);
-  color: var(--ok);
+.barcode i {
+  display: block;
+  height: 100%;
+  background: var(--t-faded);
 }
 
-.pill--warn {
-  background: rgb(239 68 68 / 0.15);
-  color: var(--danger);
+.barcode--strong i {
+  background: var(--t-3);
 }
 
-/* Configurações ------------------------------------------------------------ */
+.traffic {
+  display: flex;
+  gap: 26px;
+}
+
+.traffic__item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.traffic__value {
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  color: var(--t-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Veredito do IP de saída: sem vermelho disponível, o alarme é a inversão. */
+.verdict {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.verdict__tag {
+  padding: 3px 7px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: var(--track);
+  text-transform: uppercase;
+  color: var(--t-nav);
+}
+
+.verdict__tag--alert {
+  background: var(--t-base);
+  border-color: var(--t-base);
+  color: var(--bg);
+  font-weight: 600;
+}
+
+/* Preferências -------------------------------------------------------------- */
 
 .ports {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  gap: 14px;
 }
 
-.ports label {
+.port {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-size: 0.78rem;
-  color: var(--muted);
+  gap: 5px;
 }
 
-.ports input {
-  padding: 6px 8px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--surface-strong);
-  color: var(--text);
-  font: inherit;
+.port__label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: var(--track);
+  text-transform: uppercase;
+  color: var(--t-eyebrow);
 }
 
-.ports small {
-  font-size: 0.68rem;
-  opacity: 0.7;
+.port input {
+  width: 100%;
+  padding: 4px 0 6px;
+  border: none;
+  border-bottom: 1px solid var(--line-strong);
+  border-radius: 0;
+  background: none;
+  color: var(--t-base);
+  font-family: var(--mono);
+  font-size: 16px;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  transition: border-color 140ms ease;
+}
+
+.port input:hover {
+  border-bottom-color: var(--divider);
+}
+
+.port input:focus {
+  border-bottom-color: var(--t-base);
+  outline: none;
+}
+
+.port input::-webkit-outer-spin-button,
+.port input::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+.port__hint {
+  font-size: 10px;
+  line-height: 1.45;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--t-dim);
+}
+
+.switches {
+  display: flex;
+  flex-direction: column;
 }
 
 .switch {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.85rem;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  border-top: 1px dotted var(--line);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--t-3);
+  cursor: pointer;
 }
 
+/* Interruptor de bilhete: uma caixinha marcada, não um pill de app. */
 .switch input {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--brand);
+  appearance: none;
+  position: relative;
+  width: 14px;
+  height: 14px;
+  flex: none;
+  margin: 0;
+  border: 1px solid var(--divider);
+  border-radius: 1px;
+  background: transparent;
+  cursor: pointer;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease;
 }
 
-/* Log --------------------------------------------------------------------- */
+.switch input:checked {
+  background: var(--t-base);
+  border-color: var(--t-base);
+}
+
+.switch input::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 0;
+  width: 6px;
+  height: 9px;
+  border: solid var(--bg);
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(40deg) scale(0.6);
+  opacity: 0;
+  transition:
+    opacity 120ms ease,
+    transform 160ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.switch input:checked::after {
+  opacity: 1;
+  transform: rotate(40deg) scale(1);
+}
+
+/* Log ----------------------------------------------------------------------- */
 
 .log {
-  max-height: 220px;
+  max-height: 190px;
   overflow-y: auto;
-  padding: 8px;
-  background: #0b0d11;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-family: "Cascadia Mono", "Consolas", monospace;
-  font-size: 0.72rem;
-  line-height: 1.45;
+  padding: 10px 11px;
+  background: var(--peek);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-size: 11px;
+  line-height: 1.55;
 }
 
 .log p {
-  margin: 0;
-  color: var(--muted);
+  color: var(--t-faded);
   white-space: pre-wrap;
   word-break: break-word;
 }
 
-/* Mensagens --------------------------------------------------------------- */
+/* Aviso e mensagens --------------------------------------------------------- */
 
-.alert,
-.note,
-.disclaimer {
-  margin: 0;
+/* O aviso obrigatório do PRD (§4) é o selo do bilhete: carimbo à esquerda,
+   letra miúda justificada à direita. Sempre visível, nunca no caminho. */
+.stamp {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--line);
+  background: var(--hover);
+}
+
+.seal {
+  width: 74px;
+  height: 74px;
+  flex: none;
+  color: var(--t-faded);
+}
+
+.seal__ring {
+  animation: spin 90s linear infinite;
+  transform-origin: 50% 50%;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.stamp__text {
+  font-size: 10px;
+  line-height: 1.7;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: justify;
+  color: var(--t-faded);
+}
+
+.stamp__text strong {
+  display: block;
+  font-weight: 600;
+  color: var(--t-3);
+}
+
+.notice {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   padding: 10px 12px;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  line-height: 1.45;
+  background: var(--hover);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  font-size: 11px;
+  line-height: 1.6;
+  letter-spacing: 0.04em;
+  color: var(--t-2);
 }
 
-.alert {
-  background: rgb(239 68 68 / 0.12);
-  border: 1px solid rgb(239 68 68 / 0.35);
-  color: #fca5a5;
+.notice strong {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: var(--track);
+  text-transform: uppercase;
+  color: var(--t-base);
 }
 
-.note {
-  background: rgb(168 118 216 / 0.12);
-  border: 1px solid rgb(168 118 216 / 0.3);
-  color: #d9c2f2;
+.empty {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--t-dim);
 }
 
-.disclaimer {
-  background: rgb(245 158 11 / 0.1);
-  border: 1px solid rgb(245 158 11 / 0.3);
-  color: #f8d9a0;
+/* Rodapé ------------------------------------------------------------------- */
+
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 20px 14px;
+  background: var(--peek);
+  border-top: 1px solid var(--line);
 }
 
-.muted {
+.foot__note {
+  font-size: 10px;
+  line-height: 1.5;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--t-dim);
+}
+
+/* Onboarding (primeira execução) ------------------------------------------- */
+
+/* O mesmo bilhete, antes de ter dados. O talão é mais alto: a cena e a nuvem
+   são metade do argumento. Ver docs/onboarding-v2.html. */
+.onb {
+  min-height: 300px;
+  padding: 30px 22px 24px;
+  gap: 12px;
+}
+
+.onb__step {
+  color: var(--t-eyebrow);
+}
+
+/* A nuvem, sobre a névoa — a mesma arte do ícone que a pessoa acabou de ver no
+   atalho da instalação. */
+.onb__mark {
+  width: 156px;
+  height: auto;
+  margin-bottom: 2px;
+  filter: grayscale(1) contrast(1.05);
+  user-select: none;
+}
+
+/* A explicação em um fôlego. */
+.onb__lead {
+  max-width: 40ch;
+  font-size: 12px;
+  line-height: 1.7;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--t-3);
+}
+
+/* Os avisos do Discord: rótulo à esquerda, fato à direita — a régua das faixas. */
+.facts {
+  display: flex;
+  flex-direction: column;
   margin: 0;
-  color: var(--muted);
-  font-size: 0.8rem;
+  padding: 0;
+  list-style: none;
+}
+
+.fact {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 10px 0;
+  border-top: 1px dotted var(--line);
+}
+
+.fact:first-child {
+  border-top: none;
+}
+
+.fact__key {
+  width: 66px;
+  flex: none;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: var(--track);
+  text-transform: uppercase;
+  color: var(--t-eyebrow);
+}
+
+.fact__text {
+  flex: 1;
+  font-size: 11px;
+  line-height: 1.65;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--t-3);
+}
+
+/* Gate do Tor: a linha que diz se o proxy já subiu. O install espera nela. */
+.gate {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 14px;
+  background: var(--hover);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  font-size: 10px;
+  letter-spacing: var(--track);
+  text-transform: uppercase;
+}
+
+.gate__label {
+  color: var(--t-nav);
+}
+
+.gate__value {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--t-2);
+}
+
+/* Ação principal do onboarding ocupa a largura — é uma decisão só. */
+.onb__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px 18px;
+  border-top: 1px solid var(--line);
+}
+
+.onb__actions button:first-child {
+  flex: 1;
+  padding: 12px 16px;
+}
+
+@media (max-width: 400px) {
+  .stage {
+    padding: 8px;
+  }
+
+  .band,
+  .stamp,
+  .foot {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .ports {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .seal {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition-duration: 1ms !important;
+  }
 }

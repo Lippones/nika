@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Nika — onboarding v2 (mockup)</title>
+<link rel="stylesheet" href="/src/styles.css">
+<!--
+  Mockup do onboarding da v2. Não é código de produção: é a folha de referência
+  da spec, com o CSS real do app (`/src/styles.css`) e a arte real da nuvem.
+
+  Abrir com o dev server rodando:  npm run dev
+  →  http://localhost:5173/docs/onboarding-v2.html
+
+  Tese desta versão (revisada): explicação curtíssima, e o install do Discord
+  como destino — não os endereços do proxy, que vivem na janela principal e são
+  para quem quer apontar apps à mão. São duas telas:
+
+    1. Boas-vindas   uma linha do que é + o selo do aviso (PRD §4).
+                     Ação principal leva ao Discord; a fuga "só o proxy" existe
+                     para o usuário técnico.
+    2. Discord       o porquê de ter valido a pena. Os dois avisos honestos da
+                     spec (voz = IP real; Discord hostil a IP Tor), e o install.
+                     O Tor conecta aqui, dobrado no gesto: a espera é mascarada
+                     pela leitura dos avisos, e o botão libera quando ele sobe.
+
+  Classes novas (faltam em src/styles.css): .onb, .onb__mark, .onb__step,
+  .facts/.fact, .onb__actions, .gate. O resto já existe.
+-->
+<style>
+/* A folha do mockup: duas janelas de 480x760 lado a lado. */
+.sheet {
+  display: flex;
+  gap: 26px;
+  padding: 24px;
+  align-items: flex-start;
+}
+
+.frame {
+  width: 480px;
+  height: 760px;
+  overflow: hidden;
+  position: relative;
+  flex: none;
+}
+
+.frame__tag {
+  position: absolute;
+  left: 12px;
+  bottom: -20px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--t-dim);
+}
+
+/* --- o que é novo -------------------------------------------------------- */
+
+/* O talão do onboarding é mais alto: a cena é metade do argumento. */
+.onb {
+  min-height: 320px;
+  padding: 30px 22px 26px;
+  gap: 12px;
+}
+
+/* A nuvem, sobre a névoa. É a mesma arte do ícone — quem instalou acabou de ver
+   este desenho no atalho, e reencontrá-lo aqui amarra as duas coisas. */
+.onb__mark {
+  width: 168px;
+  height: auto;
+  margin-bottom: 2px;
+  opacity: 0.92;
+  filter: grayscale(1) contrast(1.05);
+  user-select: none;
+}
+
+.onb__step {
+  color: var(--t-eyebrow);
+}
+
+/* Uma linha só de explicação — o "extremamente curto". */
+.onb__lead {
+  max-width: 40ch;
+  font-size: 12px;
+  line-height: 1.7;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--t-3);
+}
+
+/* Os avisos: rótulo à esquerda, fato à direita. Mesma régua das faixas. */
+.facts {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fact {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 10px 0;
+  border-top: 1px dotted var(--line);
+}
+
+.fact:first-child {
+  border-top: none;
+}
+
+.fact__key {
+  width: 68px;
+  flex: none;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: var(--track);
+  text-transform: uppercase;
+  color: var(--t-eyebrow);
+}
+
+.fact__text {
+  flex: 1;
+  font-size: 11px;
+  line-height: 1.65;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--t-3);
+}
+
+/* Gate do Tor: a linha que diz se o proxy já está no ar. O install espera nela. */
+.gate {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 14px;
+  background: var(--hover);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  font-size: 10px;
+  letter-spacing: var(--track);
+  text-transform: uppercase;
+}
+
+.gate__label {
+  color: var(--t-nav);
+}
+
+.gate__value {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--t-2);
+}
+
+/* Ações do onboarding: a principal ocupa a largura — é uma decisão só. */
+.onb__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px 18px;
+  border-top: 1px solid var(--line);
+}
+
+.onb__actions button:first-child {
+  flex: 1;
+  padding: 12px 16px;
+}
+</style>
+</head>
+<body>
+
+<div class="sheet">
+
+  <!-- ------------------------------------------------------------------ 1 -->
+  <div class="frame">
+    <div class="stage">
+      <main class="ticket">
+        <header class="bar">
+          <span>Nika · Proxy Tor</span>
+          <span class="onb__step">Passo 1 de 2</span>
+        </header>
+
+        <div class="stub onb">
+          <div class="stub__backdrop stub__backdrop--live" aria-hidden></div>
+          <img class="onb__mark" src="/src/assets/cloud.png" alt="">
+          <span class="stub__eyebrow">Instalado</span>
+          <h1 class="stub__title">Discord <span>pela rede Tor</span></h1>
+          <p class="onb__lead">O Nika roteia o tráfego pela rede Tor. Configure o Discord ou use o proxy com qualquer app.</p>
+        </div>
+
+        <div class="perf"></div>
+
+        <section class="stamp">
+          <svg class="seal" viewBox="0 0 100 100" aria-hidden>
+            <defs><path id="ring1" d="M 50 50 m -37 0 a 37 37 0 1 1 74 0 a 37 37 0 1 1 -74 0"/></defs>
+            <circle cx="50" cy="50" r="47.5" fill="none" stroke="currentColor" stroke-width="1"/>
+            <circle cx="50" cy="50" r="29" fill="none" stroke="currentColor" stroke-width="0.6"/>
+            <g class="seal__ring"><text font-size="8.4" letter-spacing="1.6" fill="currentColor">
+              <textPath href="#ring1" startOffset="0">TROCA DE IP · NÃO É ANONIMATO · TROCA DE IP · NÃO É ANONIMATO ·</textPath>
+            </text></g>
+            <text x="50" y="53.5" text-anchor="middle" font-size="13" font-weight="600" letter-spacing="0.5" fill="currentColor">IP ≠ ID</text>
+          </svg>
+          <p class="stamp__text">
+            <strong>Isto troca o seu IP. Não te torna anônimo.</strong>
+            Fingerprint de navegador, WebRTC, telemetria de apps e contas logadas continuam te identificando.
+          </p>
+        </section>
+
+        <div class="onb__actions">
+          <button type="button" class="solid">Configurar o Discord</button>
+          <button type="button" class="ghost">Só o proxy</button>
+        </div>
+      </main>
+    </div>
+    <span class="frame__tag">1 · boas-vindas</span>
+  </div>
+
+  <!-- --------------------------------------------------------------- 2a -->
+  <!-- Mesma tela, enquanto o Tor sobe. A espera é mascarada pela leitura dos
+       avisos; o install fica travado no gate até o proxy estar no ar. -->
+  <div class="frame">
+    <div class="stage">
+      <main class="ticket">
+        <header class="bar">
+          <span>Nika · Proxy Tor</span>
+          <span class="bar__state"><span class="dot dot--bootstrapping"></span>Conectando</span>
+        </header>
+
+        <div class="stub onb" style="min-height:224px">
+          <div class="stub__backdrop" aria-hidden></div>
+          <img class="onb__mark" src="/src/assets/cloud.png" alt="" style="width:124px;opacity:.5">
+          <span class="stub__eyebrow">Passo 2 de 2 · Discord</span>
+          <h1 class="stub__title">Rotear o <span>Discord</span></h1>
+          <span class="stub__est">Encontrado em 2 pastas</span>
+        </div>
+
+        <div class="perf"></div>
+
+        <section class="band">
+          <div class="gate">
+            <span class="gate__label">Proxy Tor</span>
+            <span class="gate__value"><span class="dot dot--bootstrapping"></span>Conectando · 45%</span>
+          </div>
+        </section>
+
+        <section class="band">
+          <ul class="facts">
+            <li class="fact">
+              <span class="fact__key">Antes</span>
+              <span class="fact__text">IP de saída Tor recebe captcha, verificação por telefone e, às vezes, bloqueio de conta.</span>
+            </li>
+            <li class="fact">
+              <span class="fact__key">Voz</span>
+              <span class="fact__text">Chamadas de voz saem pelo seu IP real. O Tor não transporta voz.</span>
+            </li>
+            <li class="fact">
+              <span class="fact__key">Como</span>
+              <span class="fact__text">Um componente ao lado do Discord, reaplicado quando ele atualiza. Some ao remover.</span>
+            </li>
+          </ul>
+        </section>
+
+        <div class="onb__actions">
+          <button type="button" disabled>Conectando ao Tor…</button>
+          <button type="button" class="ghost">Agora não</button>
+        </div>
+      </main>
+    </div>
+    <span class="frame__tag">2 · conectando (transitório)</span>
+  </div>
+
+  <!-- ------------------------------------------------------------------ 3 -->
+  <div class="frame">
+    <div class="stage">
+      <main class="ticket">
+        <header class="bar">
+          <span>Nika · Proxy Tor</span>
+          <span class="bar__state"><span class="dot dot--connected"></span>Tor no ar</span>
+        </header>
+
+        <div class="stub onb" style="min-height:224px">
+          <div class="stub__backdrop stub__backdrop--live" aria-hidden></div>
+          <img class="onb__mark" src="/src/assets/cloud.png" alt="" style="width:124px">
+          <span class="stub__eyebrow">Passo 2 de 2 · Discord</span>
+          <h1 class="stub__title">Rotear o <span>Discord</span></h1>
+          <span class="stub__est">Encontrado em 2 pastas</span>
+        </div>
+
+        <div class="perf"></div>
+
+        <section class="band">
+          <div class="gate">
+            <span class="gate__label">Proxy Tor</span>
+            <span class="gate__value"><span class="dot dot--connected"></span>No ar · pronto para instalar</span>
+          </div>
+        </section>
+
+        <section class="band">
+          <ul class="facts">
+            <li class="fact">
+              <span class="fact__key">Antes</span>
+              <span class="fact__text">IP de saída Tor recebe captcha, verificação por telefone e, às vezes, bloqueio de conta.</span>
+            </li>
+            <li class="fact">
+              <span class="fact__key">Voz</span>
+              <span class="fact__text">Chamadas de voz saem pelo seu IP real. O Tor não transporta voz.</span>
+            </li>
+            <li class="fact">
+              <span class="fact__key">Como</span>
+              <span class="fact__text">Um componente ao lado do Discord, reaplicado quando ele atualiza. Some ao remover.</span>
+            </li>
+          </ul>
+        </section>
+
+        <section class="band">
+          <div class="switches">
+            <label class="switch">
+              <span>Fechar e reabrir o Discord agora</span>
+              <input type="checkbox" checked>
+            </label>
+          </div>
+        </section>
+
+        <div class="onb__actions">
+          <button type="button" class="solid">Instalar no Discord</button>
+          <button type="button" class="ghost">Agora não</button>
+        </div>
+      </main>
+    </div>
+    <span class="frame__tag">2 · pronto para instalar</span>
+  </div>
+
+</div>
+</body>
+</html>

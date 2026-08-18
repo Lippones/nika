@@ -1,13 +1,16 @@
 import { useState } from "react";
 
-import { CircuitCard } from "./components/CircuitCard";
+import { Circuit } from "./components/Circuit";
 import { Disclaimer } from "./components/Disclaimer";
-import { LogCard } from "./components/LogCard";
-import { ProxyCard } from "./components/ProxyCard";
-import { SettingsCard } from "./components/SettingsCard";
-import { StatusCard } from "./components/StatusCard";
+import { DiscordProxy } from "./components/DiscordProxy";
+import { Endpoints } from "./components/Endpoints";
+import { LogPanel } from "./components/LogPanel";
+import { Onboarding } from "./components/Onboarding";
+import { Preferences } from "./components/Preferences";
+import { Stub } from "./components/Stub";
 import { useAction } from "./hooks/useAction";
 import { useConfig } from "./hooks/useConfig";
+import { useDiscord } from "./hooks/useDiscord";
 import { useTorStatus } from "./hooks/useTorStatus";
 import { api } from "./lib/ipc";
 
@@ -15,6 +18,7 @@ export default function App() {
   const status = useTorStatus();
   const { config, save, saving, error: configError } = useConfig();
   const action = useAction();
+  const discord = useDiscord();
   const [identityNote, setIdentityNote] = useState(false);
 
   async function newIdentity() {
@@ -23,48 +27,81 @@ export default function App() {
     setIdentityNote(true);
   }
 
-  return (
-    <main className="app">
-      <StatusCard
+  // Enquanto a config não carrega, nada de janela: um flash da tela principal
+  // seguido do onboarding seria pior que meio segundo de vazio.
+  if (!config) return <div className="stage" aria-busy="true" />;
+
+  if (!config.onboarded) {
+    return (
+      <Onboarding
         status={status}
-        pending={action.pending}
-        onConnect={() => void action.run(api.connect)}
-        onDisconnect={() => void action.run(api.disconnect)}
-        onNewIdentity={() => void newIdentity()}
+        discord={discord.status}
+        discordLoading={discord.loading}
+        config={config}
+        onFinish={() => void save({ ...config, onboarded: true })}
       />
+    );
+  }
 
-      {action.error && <p className="alert">{action.error}</p>}
+  return (
+    <div className="stage">
+      <main className="ticket">
+        <Stub
+          status={status}
+          pending={action.pending}
+          onConnect={() => void action.run(api.connect)}
+          onDisconnect={() => void action.run(api.disconnect)}
+          onNewIdentity={() => void newIdentity()}
+        />
 
-      {identityNote && !action.error && (
-        <p className="note">
-          Novo circuito pedido. Conexões já abertas continuam no circuito antigo
-          até serem refeitas.
-        </p>
-      )}
+        <div className="perf" />
 
-      <Disclaimer />
+        {(action.error || (identityNote && !action.error)) && (
+          <section className="band">
+            {action.error ? (
+              <p className="notice">
+                <strong>A ação não foi concluída</strong>
+                {action.error}
+              </p>
+            ) : (
+              <p className="notice">
+                <strong>Circuito novo pedido</strong>
+                Conexões já abertas seguem no circuito antigo até serem refeitas.
+              </p>
+            )}
+          </section>
+        )}
 
-      {config && <ProxyCard config={config} />}
+        <Endpoints config={config} />
 
-      <CircuitCard status={status} />
+        <DiscordProxy
+          status={discord.status}
+          loading={discord.loading}
+          connected={status.phase === "connected"}
+          config={config}
+          onSave={(next) => void save(next)}
+        />
 
-      {config && (
-        <SettingsCard
+        <Circuit status={status} />
+
+        <Preferences
           config={config}
           saving={saving}
           error={configError}
           onSave={(next) => void save(next)}
         />
-      )}
 
-      <LogCard />
+        <LogPanel />
 
-      <footer className="footer">
-        <span>Fechar a janela apenas esconde o app na bandeja.</span>
-        <button type="button" className="ghost" onClick={() => void api.quit()}>
-          Sair do Nika
-        </button>
-      </footer>
-    </main>
+        <Disclaimer />
+
+        <footer className="foot">
+          <span className="foot__note">Fechar a janela só esconde o Nika na bandeja</span>
+          <button type="button" className="ghost" onClick={() => void api.quit()}>
+            Sair
+          </button>
+        </footer>
+      </main>
+    </div>
   );
 }
