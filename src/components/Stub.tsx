@@ -1,3 +1,4 @@
+import { TitleBar } from "./TitleBar";
 import { PHASE_TAG, PHASE_TITLE } from "../lib/format";
 import { isActive, type TorStatus } from "../lib/types";
 
@@ -28,13 +29,14 @@ export function Stub({
 
   return (
     <>
-      <header className="bar">
-        <span>Nika · Proxy Tor</span>
-        <span className="bar__state">
-          <span className={`dot dot--${status.phase}`} aria-hidden />
-          {PHASE_TAG[status.phase]}
-        </span>
-      </header>
+      <TitleBar
+        right={
+          <span className="bar__state">
+            <span className={`dot dot--${status.phase}`} aria-hidden />
+            {PHASE_TAG[status.phase]}
+          </span>
+        }
+      />
 
       <div className="stub">
         <div

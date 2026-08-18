@@ -276,6 +276,20 @@ pub fn copy_text(app: AppHandle, text: String) -> Result<()> {
     actions::copy(&app, &text)
 }
 
+/// Esconde a janela na bandeja. É o botão de fechar da UI: sem moldura nativa,
+/// não há X do sistema (o `CloseRequested` do Alt+F4 continua caindo no mesmo
+/// destino, em `lib.rs`).
+#[tauri::command]
+pub fn hide_window(app: AppHandle) {
+    crate::window::hide(&app);
+}
+
+/// Minimiza a janela sem moldura.
+#[tauri::command]
+pub fn minimize_window(app: AppHandle) {
+    crate::window::minimize(&app);
+}
+
 #[tauri::command]
 pub async fn quit(app: AppHandle, state: State<'_, AppState>) -> Result<()> {
     actions::quit(app, &state).await;

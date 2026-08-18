@@ -73,6 +73,8 @@ pub fn run() {
             commands::discord_uninstall,
             commands::discord_relaunch,
             commands::copy_text,
+            commands::hide_window,
+            commands::minimize_window,
             commands::quit,
         ])
         .build(tauri::generate_context!())

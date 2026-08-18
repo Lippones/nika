@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { Seal } from "./Seal";
+import { TitleBar } from "./TitleBar";
 import { api, errorMessage } from "../lib/ipc";
 import { PHASE_TAG } from "../lib/format";
 import { isActive, type Config, type DiscordStatus, type TorStatus } from "../lib/types";
@@ -80,10 +81,7 @@ export function Onboarding({
     return (
       <div className="stage">
         <main className="ticket">
-          <header className="bar">
-            <span>Nika · Proxy Tor</span>
-            <span className="onb__step">Passo 1 de 2</span>
-          </header>
+          <TitleBar right={<span className="onb__step">Passo 1 de 2</span>} />
 
           <div className="stub onb">
             <div
@@ -170,13 +168,14 @@ export function Onboarding({
   return (
     <div className="stage">
       <main className="ticket">
-        <header className="bar">
-          <span>Nika · Proxy Tor</span>
-          <span className="bar__state">
-            <span className={`dot dot--${status.phase}`} aria-hidden />
-            {PHASE_TAG[status.phase]}
-          </span>
-        </header>
+        <TitleBar
+          right={
+            <span className="bar__state">
+              <span className={`dot dot--${status.phase}`} aria-hidden />
+              {PHASE_TAG[status.phase]}
+            </span>
+          }
+        />
 
         <div className="stub onb" style={{ minHeight: 224 }}>
           <div
