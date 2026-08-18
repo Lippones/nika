@@ -5,6 +5,7 @@ import { Disclaimer } from "./components/Disclaimer";
 import { DiscordProxy } from "./components/DiscordProxy";
 import { Endpoints } from "./components/Endpoints";
 import { LogPanel } from "./components/LogPanel";
+import { Onboarding } from "./components/Onboarding";
 import { Preferences } from "./components/Preferences";
 import { Stub } from "./components/Stub";
 import { useAction } from "./hooks/useAction";
@@ -24,6 +25,22 @@ export default function App() {
     setIdentityNote(false);
     await action.run(api.newIdentity);
     setIdentityNote(true);
+  }
+
+  // Enquanto a config não carrega, nada de janela: um flash da tela principal
+  // seguido do onboarding seria pior que meio segundo de vazio.
+  if (!config) return <div className="stage" aria-busy="true" />;
+
+  if (!config.onboarded) {
+    return (
+      <Onboarding
+        status={status}
+        discord={discord.status}
+        discordLoading={discord.loading}
+        config={config}
+        onFinish={() => void save({ ...config, onboarded: true })}
+      />
+    );
   }
 
   return (
@@ -55,9 +72,8 @@ export default function App() {
           </section>
         )}
 
-        {config && <Endpoints config={config} />}
+        <Endpoints config={config} />
 
-      {config && (
         <DiscordProxy
           status={discord.status}
           loading={discord.loading}
@@ -65,18 +81,15 @@ export default function App() {
           config={config}
           onSave={(next) => void save(next)}
         />
-      )}
 
         <Circuit status={status} />
 
-        {config && (
-          <Preferences
-            config={config}
-            saving={saving}
-            error={configError}
-            onSave={(next) => void save(next)}
-          />
-        )}
+        <Preferences
+          config={config}
+          saving={saving}
+          error={configError}
+          onSave={(next) => void save(next)}
+        />
 
         <LogPanel />
 

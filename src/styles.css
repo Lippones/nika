@@ -884,6 +884,120 @@ button.copy:hover:not(:disabled) {
   color: var(--t-dim);
 }
 
+/* Onboarding (primeira execução) ------------------------------------------- */
+
+/* O mesmo bilhete, antes de ter dados. O talão é mais alto: a cena e a nuvem
+   são metade do argumento. Ver docs/onboarding-v2.html. */
+.onb {
+  min-height: 300px;
+  padding: 30px 22px 24px;
+  gap: 12px;
+}
+
+.onb__step {
+  color: var(--t-eyebrow);
+}
+
+/* A nuvem, sobre a névoa — a mesma arte do ícone que a pessoa acabou de ver no
+   atalho da instalação. */
+.onb__mark {
+  width: 156px;
+  height: auto;
+  margin-bottom: 2px;
+  filter: grayscale(1) contrast(1.05);
+  user-select: none;
+}
+
+/* A explicação em um fôlego. */
+.onb__lead {
+  max-width: 40ch;
+  font-size: 12px;
+  line-height: 1.7;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--t-3);
+}
+
+/* Os avisos do Discord: rótulo à esquerda, fato à direita — a régua das faixas. */
+.facts {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fact {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 10px 0;
+  border-top: 1px dotted var(--line);
+}
+
+.fact:first-child {
+  border-top: none;
+}
+
+.fact__key {
+  width: 66px;
+  flex: none;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: var(--track);
+  text-transform: uppercase;
+  color: var(--t-eyebrow);
+}
+
+.fact__text {
+  flex: 1;
+  font-size: 11px;
+  line-height: 1.65;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--t-3);
+}
+
+/* Gate do Tor: a linha que diz se o proxy já subiu. O install espera nela. */
+.gate {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 14px;
+  background: var(--hover);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  font-size: 10px;
+  letter-spacing: var(--track);
+  text-transform: uppercase;
+}
+
+.gate__label {
+  color: var(--t-nav);
+}
+
+.gate__value {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--t-2);
+}
+
+/* Ação principal do onboarding ocupa a largura — é uma decisão só. */
+.onb__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px 18px;
+  border-top: 1px solid var(--line);
+}
+
+.onb__actions button:first-child {
+  flex: 1;
+  padding: 12px 16px;
+}
+
 @media (max-width: 400px) {
   .stage {
     padding: 8px;

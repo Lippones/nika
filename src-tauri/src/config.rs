@@ -39,6 +39,10 @@ pub struct Config {
     /// Conectar sozinho ao abrir (RF-23).
     pub auto_connect: bool,
     pub discord: DiscordConfig,
+    /// A janela de boas-vindas já foi vista e concluída. `false` no primeiro
+    /// start (config nova ou vinda da v1, onde o campo não existe e o
+    /// `serde(default)` o preenche): a UI abre no onboarding, não na janela.
+    pub onboarded: bool,
 }
 
 impl Default for Config {
@@ -50,6 +54,7 @@ impl Default for Config {
             autostart: false,
             auto_connect: true,
             discord: DiscordConfig::default(),
+            onboarded: false,
         }
     }
 }

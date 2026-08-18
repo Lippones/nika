@@ -27,6 +27,8 @@ export interface Config {
   autostart: boolean;
   autoConnect: boolean;
   discord: DiscordConfig;
+  /** A janela de boas-vindas já foi concluída. `false` → a UI abre no onboarding. */
+  onboarded: boolean;
 }
 
 export interface DiscordConfig {

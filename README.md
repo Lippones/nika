@@ -248,6 +248,20 @@ Dois pontos que valem saber antes de mexer:
 - **Sem verde nem vermelho.** Como não existe cor de acento, "fora do Tor" e os
   erros gritam por inversão de contraste, não por cor.
 
+### Primeira execução (onboarding)
+
+Quando `config.onboarded` é `false` — instalação nova, ou config da v1 onde o
+campo não existe e o `serde(default)` o preenche — a UI abre no
+`Onboarding` (`src/components/Onboarding.tsx`) em vez da janela. São duas telas
+do mesmo bilhete: boas-vindas (explicação curta + o selo do aviso) e o Discord
+(os avisos honestos da spec e o install). O Tor conecta dobrado no gesto de ir
+para o Discord, e o botão de instalar espera o proxy subir. Concluir ou pular
+grava `onboarded: true` via `set_config`; a partir daí a janela normal abre
+direto. A referência visual das telas está em
+[docs/onboarding-v2.html](docs/onboarding-v2.html) (abre em
+`http://localhost:5173/docs/onboarding-v2.html` com `npm run dev`; a própria UI
+em `?onboarding` força a primeira execução no preview).
+
 ### Requisitos cobertos
 
 | Fase 1 (MVP) | Onde |

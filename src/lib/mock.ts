@@ -33,6 +33,12 @@ const CIRCUIT: Circuit = {
   ],
 };
 
+// No preview web a janela principal é o padrão; `?onboarding` na URL força a
+// primeira execução para revisar as telas de boas-vindas.
+const PREVIEW_ONBOARDING =
+  typeof location !== "undefined" &&
+  new URLSearchParams(location.search).has("onboarding");
+
 let config: Config = {
   socksPort: 9050,
   httpPort: 9080,
@@ -40,6 +46,7 @@ let config: Config = {
   autostart: true,
   autoConnect: false,
   discord: { mode: "off", reapplyOnStart: true, allowClose: true },
+  onboarded: !PREVIEW_ONBOARDING,
 };
 
 /** Um Discord estável instalado, componente já baixado, proxy desligado. */
