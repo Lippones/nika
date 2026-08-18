@@ -44,14 +44,23 @@ reqwest = { version = "0.12", default-features = false, features = [
   "rustls-tls",
 ] }
 
+# Impressão digital do shim do Discord: uma `version.dll` numa pasta do Discord
+# só conta como nossa se o SHA-256 bater com o do shim empacotado (docs/discord-dll.md §6).
+sha2 = "0.10"
+
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.59", features = [
   "Win32_Foundation",
   # `CreateJobObjectW` recebe SECURITY_ATTRIBUTES, que mora aqui.
   "Win32_Security",
+  # Snapshot de processos, para achar e fechar o Discord (RF-28/29).
+  "Win32_System_Diagnostics_ToolHelp",
   "Win32_System_JobObjects",
   "Win32_System_Threading",
 ] }
+# Descoberta das pastas do Discord: só HKCU, porque o Discord instala por
+# usuário — é o que mantém a promessa de "sem admin" (RF-27).
+winreg = "0.52"
 
 [profile.release]
 codegen-units = 1

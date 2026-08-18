@@ -1,16 +1,16 @@
 import { useState } from "react";
 
-import { Card } from "./Card";
+import { Band } from "./Band";
 import { api } from "../lib/ipc";
 import { httpUrl, socksUrl } from "../lib/format";
 import type { Config } from "../lib/types";
 
-interface ProxyCardProps {
+interface EndpointsProps {
   config: Config;
 }
 
 /** RF-08: endereços prontos para colar em qualquer cliente. */
-export function ProxyCard({ config }: ProxyCardProps) {
+export function Endpoints({ config }: EndpointsProps) {
   const [copied, setCopied] = useState<string | null>(null);
 
   async function copy(value: string) {
@@ -25,18 +25,18 @@ export function ProxyCard({ config }: ProxyCardProps) {
   ];
 
   return (
-    <Card title="Endereços do proxy">
-      <ul className="endpoints">
+    <Band label="Endereços do proxy">
+      <ul className="rows">
         {endpoints.map(({ label, value }) => (
-          <li key={label}>
-            <span className="endpoints__label">{label}</span>
-            <code>{value}</code>
-            <button type="button" onClick={() => void copy(value)}>
+          <li key={label} className="row">
+            <span className="row__key">{label}</span>
+            <code className="row__value row__value--strong">{value}</code>
+            <button type="button" className="copy" onClick={() => void copy(value)}>
               {copied === value ? "Copiado" : "Copiar"}
             </button>
           </li>
         ))}
       </ul>
-    </Card>
+    </Band>
   );
 }

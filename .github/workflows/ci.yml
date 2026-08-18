@@ -49,3 +49,13 @@ jobs:
         working-directory: src-tauri
       - run: cargo test
         working-directory: src-tauri
+
+      # Shim do Discord (version.dll própria): crate Windows-only fora do
+      # workspace. Compila, linta e testa as funções puras. Não é carregado
+      # dentro de um Discord real aqui — ver docs/discord-dll.md §12.
+      - run: cargo fmt --all --check
+        working-directory: src-tauri/discord-shim
+      - run: cargo clippy --all-targets --target x86_64-pc-windows-msvc -- -D warnings
+        working-directory: src-tauri/discord-shim
+      - run: cargo test
+        working-directory: src-tauri/discord-shim

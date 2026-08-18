@@ -5,10 +5,37 @@ plano e deixa um **SOCKS5 em `127.0.0.1:9050`** e um **HTTP CONNECT em
 `127.0.0.1:9080`** prontos para qualquer aplicativo apontar — sem abrir o Tor
 Browser, sem driver, sem privilégio de administrador.
 
-Implementa a Fase 1 do [PRD](./PRD.md).
+Implementa a Fase 1 do [PRD](./PRD.md), mais o **proxy no Discord** (Fase 4 —
+ver abaixo).
 
 > **Isto troca o seu IP, não te torna anônimo.** Para navegação anônima, use o
 > Tor Browser.
+
+---
+
+## Proxy no Discord
+
+O Discord não tem configuração de proxy e ignora o proxy de sistema. O Nika
+resolve isso instalando, dentro da pasta do Discord, uma **`version.dll` própria**
+(o *shim*, crate [`discord-shim`](src-tauri/discord-shim/)): ao carregar, ela
+injeta `--proxy-server` no Chromium do Electron. Diferente da abordagem antiga
+(baixar o binário do [discord-drover](https://github.com/hdrover/discord-drover)),
+o shim é nosso — entra no instalador, pode ser assinado e falha aberto (sem
+proxy) em vez de derrubar o Discord.
+
+Na janela do Nika, a faixa **Proxy no Discord** detecta as pastas, o processo
+aberto e a porta — instalar e remover são um clique.
+
+> **Voz não passa pelo Tor.** A voz do Discord é UDP e o Tor só transporta TCP:
+> entrar em um canal de voz revela seu IP real. E o Discord trata IP de saída
+> Tor com hostilidade (captcha, verificação por telefone, bloqueio de conta).
+
+> **Ainda não validado dentro de um Discord real.** A DLL compila e é
+> type-checada no alvo Windows, mas hookar sem quebrar o processo só se prova no
+> Windows — ver os gates em [docs/discord-dll.md](docs/discord-dll.md) §12.
+
+Spec da DLL: [docs/discord-dll.md](docs/discord-dll.md). Descoberta de pastas,
+processo e instalar/remover: [docs/discord-proxy.md](docs/discord-proxy.md).
 
 ---
 
@@ -32,11 +59,16 @@ Windows-only; a árvore pode viver no WSL, mas compile do lado Windows).
 npm install
 npm run icons                  # gera os ícones do app e da bandeja
 pwsh scripts/fetch-tor.ps1     # baixa e verifica o Tor Expert Bundle (~35 MB)
+pwsh scripts/build-shim.ps1    # compila o version.dll do proxy do Discord (opcional)
 ```
 
-A versão e o checksum já estão fixados em `scripts/tor-bundle.lock.json`; o
-script baixa exatamente aquilo e recusa qualquer coisa diferente. Para subir de
-versão, ver [docs/tor-bundle.md](docs/tor-bundle.md).
+A versão e o checksum do Tor já estão fixados em `scripts/tor-bundle.lock.json`;
+o script baixa exatamente aquilo e recusa qualquer coisa diferente. Para subir
+de versão, ver [docs/tor-bundle.md](docs/tor-bundle.md).
+
+`build-shim.ps1` é **opcional**: sem ele o app compila e roda, só a faixa
+"Proxy no Discord" aparece como "componente ausente". Com ele, o `version.dll`
+do shim vai para `resources/discord/` e entra no instalador.
 
 ### 3. Compilar
 
@@ -90,6 +122,17 @@ Duas coisas que valem separar:
 ```powershell
 npm run app:dev
 ```
+
+### Ver só a interface, no navegador
+
+```bash
+npm run dev
+```
+
+Fora do Tauri não existe core, então `src/lib/ipc.ts` cai num núcleo falso
+(`src/lib/mock.ts`): ele simula o bootstrap, entrega um circuito e um log
+plausíveis e faz o tráfego subir. Serve para mexer no design sem compilar o app
+— e não vai para dentro do Tauri, onde o `invoke` de verdade é usado.
 
 ### Testes
 
@@ -148,11 +191,62 @@ src-tauri/src/
   actions.rs         ações compartilhadas entre UI e bandeja
   commands.rs        superfície de IPC
   tray.rs            ícone e menu da bandeja
+src-tauri/icons/
+  source/            as duas nuvens de meio-tom (arte de origem, versionada)
+  *.png, icon.ico    derivados por `npm run icons` — não edite à mão
 src/
   lib/ipc.ts         única porta de entrada para o core
+  lib/mock.ts        núcleo falso do preview web (nunca usado dentro do Tauri)
   hooks/             estado do Tor, logs, config, ações
-  components/        cartões da janela
+  components/        campos do bilhete (talão, endereços, circuito, selo)
+  styles.css         o sistema visual inteiro, em tokens
+  fonts/             JetBrains Mono e Inter Tight (offline, ver fonts/README.md)
+  assets/backdrop.jpg  cena de fundo do talão — troque o arquivo para mudar
 ```
+
+### Ícones
+
+A arte é uma nuvem em meio-tom e mora em `src-tauri/icons/source/`: `app-icon.png`
+(nuvem clara sobre o cartão escuro) e `tray-cloud.png` (a nuvem solta).
+`npm run icons` decodifica, recorta pela caixa da tinta, reamostra por média de
+caixa e escreve todos os tamanhos, inclusive o `.ico`. Trocar um ícone é trocar o
+PNG de origem e rodar isso — nada de editar os derivados.
+
+Na bandeja a retícula não sobrevive: a 16px ela vira borrão. Então de lá sai só a
+**silhueta chapada** da mesma nuvem, e o estado é dito pela forma, nunca por cor:
+
+| Estado | Desenho |
+|---|---|
+| `stopped` | só o contorno, em `#9A9A9A` |
+| `connecting` | cheia em `#C4C4C4`, aro escuro |
+| `connected` | cheia em `#F5F5F5`, aro `#565656` |
+| `error` | cheia, cortada por um vão diagonal |
+
+O aro escuro existe para a barra de tarefas clara, onde branco sobre branco
+desapareceria. O corte do erro é um vão, não uma barra colorida, pelo mesmo
+motivo.
+
+**Se o executável continuar com o ícone antigo**, não é o `.ico`: é cache. O
+`tauri_build` embute `icons/icon.ico` no binário mas não pedia rebuild quando a
+arte mudava — [`build.rs`](src-tauri/build.rs) agora declara essa dependência. Já
+uma instalação anterior segue com o ícone dela até ser reinstalada, e o Explorer
+guarda miniatura à parte (`ie4uinit.exe -show` limpa).
+
+### Desenho da janela
+
+A janela é um **bilhete técnico**: barra de cabeçalho com o estado, talão com o
+estado em letra grande e um globo em ASCII, picote, campos rotulados em caixa
+alta e um selo com o aviso obrigatório do PRD (§4). Paleta neutra, sem cor de
+acento: a hierarquia é feita de fios de 1px e de uma única inversão
+(`#F5F5F5` sobre `#191919`), reservada à ação principal.
+
+Dois pontos que valem saber antes de mexer:
+
+- **O código de barras é dado.** Cada barra vem de um dígito hexadecimal do
+  fingerprint do relay de saída (`src/components/Barcode.tsx`) — circuito novo,
+  código novo.
+- **Sem verde nem vermelho.** Como não existe cor de acento, "fora do Tor" e os
+  erros gritam por inversão de contraste, não por cor.
 
 ### Requisitos cobertos
 

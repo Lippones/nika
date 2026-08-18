@@ -28,6 +28,16 @@ if (missing.length > 0) {
   process.exit(1);
 }
 
+// O shim do Discord é opcional: um build Tor-only funciona sem ele. Se faltar,
+// avisa (não falha) — a faixa "Proxy no Discord" aparece como "componente ausente".
+if (!existsSync(join(root, "src-tauri", "resources/discord/version.dll"))) {
+  console.warn(
+    "\n  AVISO: o shim do Discord (resources/discord/version.dll) não está\n" +
+      "  presente. O proxy do Discord ficará indisponível neste build.\n" +
+      "  Para incluí-lo:  pwsh scripts/build-shim.ps1\n",
+  );
+}
+
 if (process.platform !== "win32") {
   console.warn(
     "\n  AVISO: build fora do Windows. O alvo do projeto é Windows e o binário do\n" +

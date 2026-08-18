@@ -7,6 +7,7 @@ use tauri::{AppHandle, Emitter};
 
 use crate::config::ConfigStore;
 use crate::control::ControlClient;
+use crate::discord::DiscordStore;
 use crate::logs::LogBuffer;
 use crate::supervisor::SupervisorHandle;
 use crate::tray;
@@ -151,4 +152,5 @@ pub struct AppState {
     pub logs: LogBuffer,
     pub control: ControlSlot,
     pub supervisor: SupervisorHandle,
+    pub discord: DiscordStore,
 }

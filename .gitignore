@@ -10,8 +10,17 @@ src-tauri/gen/
 # (ver docs/tor-bundle.md).
 src-tauri/resources/*
 !src-tauri/resources/.gitkeep
+# O diretório do shim do Discord existe sempre (para o glob de recursos do Tauri
+# resolver mesmo sem o shim compilado); o version.dll em si é gerado e não vai.
+!src-tauri/resources/discord/
+!src-tauri/resources/discord/.gitkeep
+src-tauri/resources/discord/version.dll
 
-# Ícones são gerados por `npm run icons`
+# target do shim (crate fora do workspace)
+src-tauri/discord-shim/target/
+
+# Ícones: os derivados saem de `npm run icons`. A arte de origem
+# (src-tauri/icons/source/) é versionada — é dela que tudo é gerado.
 src-tauri/icons/*.png
 src-tauri/icons/*.ico
 

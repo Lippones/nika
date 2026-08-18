@@ -12,6 +12,7 @@ mod autostart;
 mod commands;
 mod config;
 mod control;
+mod discord;
 mod error;
 mod logs;
 mod paths;
@@ -27,6 +28,7 @@ use tauri::{Manager, RunEvent, WindowEvent};
 use tauri_plugin_autostart::MacosLauncher;
 
 use crate::config::ConfigStore;
+use crate::discord::DiscordStore;
 use crate::logs::LogBuffer;
 use crate::paths::Paths;
 use crate::state::{AppState, ControlSlot, StatusStore};
@@ -66,6 +68,10 @@ pub fn run() {
             commands::get_circuit,
             commands::get_traffic,
             commands::check_exit_ip,
+            commands::discord_status,
+            commands::discord_install,
+            commands::discord_uninstall,
+            commands::discord_relaunch,
             commands::copy_text,
             commands::quit,
         ])
@@ -80,6 +86,36 @@ pub fn run() {
                 }
             }
         });
+}
+
+/// RF-39. Silencioso de propósito: é manutenção, não uma ação do usuário.
+fn reapply_discord(
+    app: &tauri::AppHandle,
+    settings: &crate::config::Config,
+    store: &DiscordStore,
+) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    let status = store.refresh(settings)?;
+
+    let pending = settings.discord.reapply_on_start
+        && settings.discord.mode != discord::Mode::Off
+        && status.component == discord::Component::Ready
+        && !status.running
+        && status
+            .installs
+            .iter()
+            .flat_map(|install| &install.app_dirs)
+            .any(|dir| !dir.installed);
+
+    if !pending {
+        return Ok(());
+    }
+
+    let shim = discord::component::shim_path(app).ok_or(crate::error::Error::ShimMissing)?;
+    discord::install::apply(&status.installs, settings.discord.mode, settings, &shim)?;
+    log::info!("proxy do Discord reaplicado depois de um update");
+    store.refresh(settings)?;
+
+    Ok(())
 }
 
 fn setup(app: &mut tauri::App) -> std::result::Result<(), Box<dyn std::error::Error>> {
@@ -100,12 +136,15 @@ fn setup(app: &mut tauri::App) -> std::result::Result<(), Box<dyn std::error::Er
         control.clone(),
     );
 
+    let discord = DiscordStore::new(handle.clone());
+
     app.manage(AppState {
         config: config.clone(),
         status: status.clone(),
         logs,
         control,
         supervisor: supervisor.clone(),
+        discord: discord.clone(),
     });
 
     tray::build(&handle)?;
@@ -122,6 +161,20 @@ fn setup(app: &mut tauri::App) -> std::result::Result<(), Box<dyn std::error::Er
     // RF-21: lançado pelo Windows, nasce escondido na bandeja.
     if !std::env::args().any(|arg| arg == AUTOSTART_FLAG) {
         window::show(&handle);
+    }
+
+    // RF-39: um update do Discord cria uma pasta `app-*` nova e sem os nossos
+    // arquivos. A DLL já se recopia sozinha ao ver o Discord subir, mas isso só
+    // vale enquanto a antiga carregar — aqui é a rede de segurança.
+    {
+        let discord = discord.clone();
+        let settings = settings.clone();
+        let handle = handle.clone();
+        tauri::async_runtime::spawn_blocking(move || {
+            if let Err(err) = reapply_discord(&handle, &settings, &discord) {
+                log::warn!("revalidação do proxy do Discord falhou: {err}");
+            }
+        });
     }
 
     // RF-23.
