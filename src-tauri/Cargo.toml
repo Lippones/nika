@@ -1,6 +1,6 @@
 [package]
 name = "nika"
-version = "0.1.0"
+version = "1.0.0"
 description = "Proxy Tor na bandeja do Windows"
 authors = ["Filipe Vieira"]
 edition = "2021"
