@@ -36,12 +36,12 @@ jobs:
         with:
           workspaces: src-tauri
 
-      # Ícones e bundle do Tor não são versionados, mas o build precisa deles:
-      # os ícones entram no binário via include_bytes! e o tor.exe é recurso.
+      # Ícones e o WinDivert não são versionados, mas o build precisa deles: os
+      # ícones entram no binário via include_bytes! e o driver é recurso.
       - run: npm ci
       - run: npm run icons
       - run: npm run build
-      - run: pwsh scripts/fetch-tor.ps1
+      - run: pwsh scripts/fetch-windivert.ps1
 
       - run: cargo fmt --all --check
         working-directory: src-tauri
@@ -49,13 +49,3 @@ jobs:
         working-directory: src-tauri
       - run: cargo test
         working-directory: src-tauri
-
-      # Shim do Discord (version.dll própria): crate Windows-only fora do
-      # workspace. Compila, linta e testa as funções puras. Não é carregado
-      # dentro de um Discord real aqui — ver docs/discord-dll.md §12.
-      - run: cargo fmt --all --check
-        working-directory: src-tauri/discord-shim
-      - run: cargo clippy --all-targets --target x86_64-pc-windows-msvc -- -D warnings
-        working-directory: src-tauri/discord-shim
-      - run: cargo test
-        working-directory: src-tauri/discord-shim

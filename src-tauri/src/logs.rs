@@ -1,13 +1,14 @@
-//! Buffer circular com as últimas linhas de log do tor (RF-17).
+//! Buffer circular com as últimas linhas de log do app, para diagnóstico.
 
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
 
 use tauri::{AppHandle, Emitter};
 
-use crate::state::EVENT_LOG;
+/// Espelhado em `src/lib/ipc.ts`.
+pub const EVENT_LOG: &str = "nika://log";
 
-/// Suficiente para diagnosticar um bootstrap inteiro sem virar vazamento.
+/// Suficiente para diagnosticar uma sessão inteira sem virar vazamento.
 const CAPACITY: usize = 500;
 
 #[derive(Clone)]

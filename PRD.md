@@ -1,5 +1,13 @@
 # PRD — Tor Tray (nome provisório)
 
+> **Histórico.** Este PRD descreve o Nika original: um proxy Tor na bandeja
+> (Fases 1 a 4). Em outubro de 2026 o Tor e o proxy no Discord foram removidos:
+> não destravavam a mídia do Discord, que era o problema real. O produto atual
+> é a Fase 5 — saída do Discord por túnel WireGuard entre amigos — descrita em
+> [PRODUCT.md](PRODUCT.md) e [docs/discord-tunnel.md](docs/discord-tunnel.md).
+> O texto abaixo fica como registro das decisões que levaram até lá.
+
+
 **Status:** Draft
 **Data:** 2026-08-17
 **Autor:** Filipe Vieira
@@ -228,6 +236,15 @@ RF-27 a RF-41: instalar/remover o proxy no app do Discord a partir do Nika,
 detectando pastas, porta e processo em execução. Spec completa em
 [docs/discord-proxy.md](docs/discord-proxy.md). Depende de decisão sobre a
 licença do componente de terceiro (`discord-drover`).
+
+**Fase 5 — Saída própria do Discord (túnel WireGuard)**
+RF-50 a RF-63: rotear TCP **e UDP** dos processos do Discord por uma VM do
+usuário (Oracle Always Free), interceptando por processo com o WinDivert e
+encapsulando em WireGuard de espaço de usuário. Não é o "rotear todo o
+tráfego" do §4: só o pacote do Discord é tocado. Motivação: o bloqueio de Go
+Live no Brasil é no plano de mídia (UDP), que proxy nenhum alcança. Spec em
+[docs/discord-tunnel.md](docs/discord-tunnel.md); servidor em `server/` e
+[docs/oracle-exit.md](docs/oracle-exit.md).
 
 ## 12. Critérios de sucesso do MVP
 

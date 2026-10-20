@@ -5,8 +5,8 @@
    campos rotulados em caixa alta e um selo. Nada de cor de acento — a hierarquia
    é feita de fios de 1px, entrelinha e uma única inversão (#F5F5F5 sobre
    #191919) reservada à ação principal. Monoespaçada em tudo, porque tudo aqui é
-   dado técnico: portas, fingerprints, países, bytes. A Inter Tight aparece uma
-   única vez, no estado do proxy.
+   dado técnico: endereços, chaves, bytes. A Inter Tight aparece uma única vez,
+   no estado da saída.
 --------------------------------------------------------------------------- */
 
 @font-face {
@@ -265,13 +265,11 @@ p {
   background: var(--t-dim);
 }
 
-.dot--connected {
+.dot--up {
   background: var(--t-base);
 }
 
-.dot--starting,
-.dot--bootstrapping,
-.dot--retrying {
+.dot--starting {
   background: var(--t-2);
   animation: breathe 1.6s ease-in-out infinite;
 }
@@ -831,6 +829,57 @@ button.copy:hover:not(:disabled) {
   transform: rotate(40deg) scale(1);
 }
 
+/* Perfil colado (túnel) ----------------------------------------------------- */
+
+.paste {
+  display: block;
+  width: 100%;
+  min-height: 112px;
+  padding: 8px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--peek);
+  color: var(--t-base);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  resize: vertical;
+  transition: border-color 140ms ease;
+}
+
+.paste::placeholder {
+  color: var(--t-3);
+  opacity: 0.6;
+}
+
+.paste:focus {
+  outline: none;
+  border-color: var(--t-3);
+}
+
+/* O convite lido vale um fio mais firme; o quebrado, um fio pontilhado — o
+   mesmo vocabulário das faixas, sem cor nova. */
+.paste--ok {
+  border-color: var(--t-3);
+}
+
+.paste--bad {
+  border-style: dashed;
+}
+
+.invite__hint {
+  margin: 0;
+  font-size: 10.5px;
+  line-height: 1.6;
+  letter-spacing: 0.04em;
+  color: var(--t-3);
+}
+
+.invite__hint code {
+  color: var(--t-2);
+}
+
 /* Log ----------------------------------------------------------------------- */
 
 .log {
@@ -1019,7 +1068,7 @@ button.copy:hover:not(:disabled) {
   color: var(--t-3);
 }
 
-/* Gate do Tor: a linha que diz se o proxy já subiu. O install espera nela. */
+/* Gate: a linha de estado que precede uma ação. */
 .gate {
   display: flex;
   align-items: center;

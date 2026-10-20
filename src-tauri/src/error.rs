@@ -6,51 +6,31 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("a porta {port} ({role}) já está em uso — outro Tor rodando? Tente {suggestion} nas configurações")]
-    PortInUse {
-        role: &'static str,
-        port: u16,
-        suggestion: u16,
-    },
+    // --- túnel (docs/discord-tunnel.md §7.4) ---
+    #[error("o convite é inválido: {0}")]
+    TunnelProfile(String),
 
-    #[error("binário do Tor não encontrado. Rode `scripts/fetch-tor.ps1` antes de compilar (procurei em: {searched})")]
-    TorBinaryMissing { searched: String },
+    #[error("nenhum convite guardado — cole o convite que você recebeu")]
+    TunnelNoProfile,
 
-    #[error("o Tor não está conectado")]
-    NotConnected,
+    #[error("a saída precisa de permissão de administrador — reabra o Nika como administrador")]
+    NeedsElevation,
 
-    #[error("tempo esgotado ao conectar no ControlPort")]
-    ControlTimeout,
+    #[error("o componente da saída (WinDivert) não foi incluído neste build")]
+    TunnelComponentMissing,
 
-    #[error("a conexão com o ControlPort foi encerrada")]
-    ControlClosed,
+    #[error("a saída do Discord só funciona no Windows")]
+    TunnelUnsupported,
 
-    #[error("ControlPort respondeu {code}: {message}")]
-    ControlRejected { code: u16, message: String },
-
-    #[error("configuração inválida: {0}")]
-    InvalidConfig(String),
-
-    #[error("não encontrei o Discord instalado neste usuário")]
-    DiscordNotFound,
-
-    #[error("o Discord está aberto — feche-o para continuar")]
-    DiscordRunning,
-
-    #[error("o componente do proxy do Discord (version.dll) não foi incluído neste build")]
-    ShimMissing,
-
-    #[error("não consegui gravar em: {paths}")]
-    DiscordWriteFailed { paths: String },
+    #[error("WinDivert: {0}")]
+    #[cfg_attr(not(windows), allow(dead_code))]
+    Divert(String),
 
     #[error("erro de E/S: {0}")]
     Io(#[from] std::io::Error),
 
     #[error("erro ao ler/gravar JSON: {0}")]
     Json(#[from] serde_json::Error),
-
-    #[error("erro de rede: {0}")]
-    Http(#[from] reqwest::Error),
 
     #[error("{0}")]
     Tauri(#[from] tauri::Error),

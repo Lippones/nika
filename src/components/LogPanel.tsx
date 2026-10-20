@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Band } from "./Band";
 import { useLogs } from "../hooks/useLogs";
 
-/** RF-17: as últimas linhas do tor, para diagnóstico. */
+/** As últimas linhas do Nika, para diagnóstico. */
 export function LogPanel() {
   const lines = useLogs();
   const [open, setOpen] = useState(false);
@@ -15,7 +15,7 @@ export function LogPanel() {
 
   return (
     <Band
-      label="Log do Tor"
+      label="Log"
       action={
         <button type="button" className="ghost" onClick={() => setOpen(!open)}>
           {open ? "Ocultar" : `Mostrar ${lines.length} linhas`}
