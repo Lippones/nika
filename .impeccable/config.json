@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "createdAt": "2026-10-20T03:21:53.260Z",
+        "reason": "Claude: Inter Tight Var é a face de display do sistema visual existente (bilhete técnico, src/styles.css, anterior a esta sessão), usada uma única vez no título do estado; PRODUCT.md pede preservar o sistema"
+      }
+    ]
+  }
+}
