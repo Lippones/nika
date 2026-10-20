@@ -179,11 +179,20 @@ impl Profile {
                 ("interface", "privatekey") => private_key = Some(Key::parse(value, "PrivateKey")?),
                 ("interface", "address") => address = Some(parse_address(value)?),
                 ("interface", "mtu") => {
-                    mtu = Some(value.parse::<u16>().ok().filter(|m| (576..=9000).contains(m))
-                        .ok_or_else(|| profile_error("MTU precisa ser um número entre 576 e 9000"))?);
+                    mtu = Some(
+                        value
+                            .parse::<u16>()
+                            .ok()
+                            .filter(|m| (576..=9000).contains(m))
+                            .ok_or_else(|| {
+                                profile_error("MTU precisa ser um número entre 576 e 9000")
+                            })?,
+                    );
                 }
                 ("peer", "publickey") => peer_public_key = Some(Key::parse(value, "PublicKey")?),
-                ("peer", "presharedkey") => preshared_key = Some(Key::parse(value, "PresharedKey")?),
+                ("peer", "presharedkey") => {
+                    preshared_key = Some(Key::parse(value, "PresharedKey")?)
+                }
                 ("peer", "endpoint") => endpoint = Some(parse_endpoint(value)?),
                 ("peer", "persistentkeepalive") => {
                     let secs = value
@@ -198,7 +207,8 @@ impl Profile {
         }
 
         Ok(Self {
-            private_key: private_key.ok_or_else(|| profile_error("falta PrivateKey em [Interface]"))?,
+            private_key: private_key
+                .ok_or_else(|| profile_error("falta PrivateKey em [Interface]"))?,
             peer_public_key: peer_public_key
                 .ok_or_else(|| profile_error("falta PublicKey em [Peer]"))?,
             preshared_key,
@@ -313,7 +323,11 @@ PersistentKeepalive = 25
     fn defaults_when_optional_fields_are_missing() {
         let text = SAMPLE
             .lines()
-            .filter(|l| !l.starts_with("MTU") && !l.starts_with("PersistentKeepalive") && !l.starts_with("PresharedKey"))
+            .filter(|l| {
+                !l.starts_with("MTU")
+                    && !l.starts_with("PersistentKeepalive")
+                    && !l.starts_with("PresharedKey")
+            })
             .collect::<Vec<_>>()
             .join("\n");
         let profile = Profile::parse(&text).unwrap();
@@ -325,13 +339,25 @@ PersistentKeepalive = 25
     #[test]
     fn rejects_short_keys_and_missing_fields() {
         let bad_key = SAMPLE.replace("yAnz5TF+lXXJte14tji3zlMNq+hd2rYUIgJBgB3fBmk=", "AAAA");
-        assert!(Profile::parse(&bad_key).unwrap_err().to_string().contains("PrivateKey"));
+        assert!(Profile::parse(&bad_key)
+            .unwrap_err()
+            .to_string()
+            .contains("PrivateKey"));
 
         let no_endpoint = SAMPLE.replace("Endpoint = 203.0.113.9:51820", "");
-        assert!(Profile::parse(&no_endpoint).unwrap_err().to_string().contains("Endpoint"));
+        assert!(Profile::parse(&no_endpoint)
+            .unwrap_err()
+            .to_string()
+            .contains("Endpoint"));
 
-        let v6_only = SAMPLE.replace("Address = 10.66.0.2/32, fd4e:696b:61::2/128", "Address = fd4e::2/128");
-        assert!(Profile::parse(&v6_only).unwrap_err().to_string().contains("IPv4"));
+        let v6_only = SAMPLE.replace(
+            "Address = 10.66.0.2/32, fd4e:696b:61::2/128",
+            "Address = fd4e::2/128",
+        );
+        assert!(Profile::parse(&v6_only)
+            .unwrap_err()
+            .to_string()
+            .contains("IPv4"));
     }
 
     #[test]

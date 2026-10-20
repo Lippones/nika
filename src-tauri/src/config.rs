@@ -1,113 +1,37 @@
-//! Configuração do usuário (RF-24), persistida como JSON.
+//! Configuração do usuário, persistida como JSON.
+//!
+//! O que é segredo (o convite, com a chave privada) **não** mora aqui: fica em
+//! `tunnel.conf` (docs/discord-tunnel.md T-10). Isto é só preferência.
 
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
 use serde::{Deserialize, Serialize};
 
-use crate::discord::Mode;
-use crate::error::{Error, Result};
+use crate::error::Result;
 
-pub const DEFAULT_SOCKS_PORT: u16 = 9050;
-pub const DEFAULT_HTTP_PORT: u16 = 9080;
-pub const DEFAULT_CONTROL_PORT: u16 = 9051;
-
-/// Portas abaixo disso exigem privilégio em vários sistemas e não fazem sentido aqui.
-const MIN_PORT: u16 = 1024;
-
-/// Preferências do proxy no Discord (docs/discord-proxy.md §7.2). O que vale de
-/// fato está em disco, na pasta do Discord; isto é só a intenção do usuário.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase", default)]
-pub struct DiscordConfig {
-    pub mode: Mode,
-    /// RF-39: revalidar e reaplicar na abertura do app, depois de um update do
-    /// Discord ter criado uma pasta `app-*` nova.
-    pub reapply_on_start: bool,
-    /// Fechar o Discord sem perguntar de novo nas próximas operações.
-    pub allow_close: bool,
-}
-
-/// Preferências do túnel (docs/discord-tunnel.md §7.2). O perfil em si mora
-/// em `tunnel.conf`, fora daqui (T-10).
+/// Preferências do túnel (docs/discord-tunnel.md §7.2).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct TunnelConfig {
-    /// Ligar o túnel ao abrir o Nika, se houver perfil e o processo for
+    /// Ligar a saída ao abrir o Nika, se houver convite e o processo for
     /// administrador. Sem elevação a faixa só avisa — nada de UAC no boot.
     pub auto_start: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct Config {
-    pub socks_port: u16,
-    pub http_port: u16,
-    pub control_port: u16,
-    /// Subir com o Windows (RF-20). Espelha a chave `HKCU\...\Run`.
+    /// Subir com o Windows. Espelha a chave `HKCU\...\Run`.
     pub autostart: bool,
-    /// Conectar sozinho ao abrir (RF-23).
-    pub auto_connect: bool,
-    pub discord: DiscordConfig,
     pub tunnel: TunnelConfig,
-    /// A janela de boas-vindas já foi vista e concluída. `false` no primeiro
-    /// start (config nova ou vinda da v1, onde o campo não existe e o
-    /// `serde(default)` o preenche): a UI abre no onboarding, não na janela.
+    /// A tela de boas-vindas já foi concluída. `false` no primeiro start (ou
+    /// numa config antiga, onde o campo não existe e o `serde(default)` o
+    /// preenche): a UI abre no onboarding, não na janela.
     pub onboarded: bool,
 }
 
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            socks_port: DEFAULT_SOCKS_PORT,
-            http_port: DEFAULT_HTTP_PORT,
-            control_port: DEFAULT_CONTROL_PORT,
-            autostart: false,
-            auto_connect: true,
-            discord: DiscordConfig::default(),
-            tunnel: TunnelConfig::default(),
-            onboarded: false,
-        }
-    }
-}
-
-impl Config {
-    pub fn validate(&self) -> Result<()> {
-        let ports = [
-            ("SOCKS", self.socks_port),
-            ("HTTP", self.http_port),
-            ("Control", self.control_port),
-        ];
-
-        for (role, port) in ports {
-            if port < MIN_PORT {
-                return Err(Error::InvalidConfig(format!(
-                    "porta {role} deve ser >= {MIN_PORT}"
-                )));
-            }
-        }
-
-        for (i, (role, port)) in ports.iter().enumerate() {
-            if ports[i + 1..].iter().any(|(_, other)| other == port) {
-                return Err(Error::InvalidConfig(format!(
-                    "porta {port} ({role}) está repetida — as três portas precisam ser distintas"
-                )));
-            }
-        }
-
-        Ok(())
-    }
-
-    pub fn socks_url(&self) -> String {
-        format!("socks5://127.0.0.1:{}", self.socks_port)
-    }
-
-    pub fn http_url(&self) -> String {
-        format!("http://127.0.0.1:{}", self.http_port)
-    }
-}
-
-/// Config compartilhada entre supervisor, comandos e tray.
+/// Config compartilhada entre comandos, bandeja e tarefas.
 #[derive(Clone)]
 pub struct ConfigStore {
     current: Arc<Mutex<Config>>,
@@ -116,6 +40,8 @@ pub struct ConfigStore {
 
 impl ConfigStore {
     /// Config corrompida ou ilegível não impede o app de subir: cai no default.
+    /// Campos de versões anteriores (portas do Tor, proxy do Discord) são
+    /// ignorados pelo serde e somem na próxima gravação.
     pub fn load(path: PathBuf) -> Self {
         let current = match std::fs::read(&path) {
             Ok(bytes) => serde_json::from_slice(&bytes).unwrap_or_else(|err| {
@@ -140,7 +66,6 @@ impl ConfigStore {
     }
 
     pub fn set(&self, config: Config) -> Result<()> {
-        config.validate()?;
         self.persist(&config)?;
         *self.current.lock().expect("config mutex") = config;
         Ok(())
@@ -165,5 +90,20 @@ impl ConfigStore {
         std::fs::rename(&tmp, self.path.as_path())?;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn old_configs_with_tor_fields_still_load() {
+        let old = r#"{"socksPort":9050,"httpPort":9080,"autostart":true,"autoConnect":true,
+                     "discord":{"mode":"torHttp"},"onboarded":true}"#;
+        let config: Config = serde_json::from_str(old).unwrap();
+        assert!(config.autostart);
+        assert!(config.onboarded);
+        assert!(!config.tunnel.auto_start);
     }
 }

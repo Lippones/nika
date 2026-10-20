@@ -26,11 +26,9 @@ jobs:
       - run: npm ci
       - run: npm run icons
 
-      # Reproduz o bundle fixado em scripts/tor-bundle.lock.json; qualquer byte
+      # Reproduz o driver fixado em scripts/windivert.lock.json; qualquer byte
       # diferente aborta o release.
-      - run: pwsh scripts/fetch-tor.ps1
       - run: pwsh scripts/fetch-windivert.ps1
-      - run: pwsh scripts/build-shim.ps1
 
       - run: npm run app:build
 

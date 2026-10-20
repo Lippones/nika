@@ -3,8 +3,8 @@
   Baixa o WinDivert (driver + DLL) e o instala em src-tauri/resources/windivert/.
 
 .DESCRIPTION
-  Componente do túnel do Discord (docs/discord-tunnel.md T-07/T-11). Mesmo
-  desenho do fetch-tor.ps1: versão e SHA-256 fixados em scripts/windivert.lock.json;
+  Componente do túnel do Discord (docs/discord-tunnel.md T-07/T-11). Versão e
+  SHA-256 fixados em scripts/windivert.lock.json;
   qualquer byte diferente é recusado. O projeto não assina os zips com GPG; a
   âncora é o driver ser assinado pela Microsoft (senão o Windows não o carrega)
   e o hash do zip oficial ter sido fixado por uma pessoa no -Update.

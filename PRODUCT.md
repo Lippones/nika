@@ -10,11 +10,10 @@ web
 
 - **Dono da saída** (o Filipe, e quem mais seguir `docs/oracle-exit.md`): sobe uma VM na Oracle Cloud, gerencia quem tem acesso pelo terminal (`nika-peer add|remove|list` via SSH) e usa o Nika no próprio PC para o Go Live.
 - **Convidados**: 3 a 10 amigos leigos, no Windows, que só querem que o Go Live e a voz do Discord voltem a funcionar. Recebem um convite do dono por mensagem (Discord/WhatsApp), colam no Nika e seguem. Nenhum deles usa terminal.
-- **Usuário do proxy Tor** (o público original do Nika): aponta apps para o SOCKS5/HTTP, ou instala o proxy no Discord para texto.
 
 ## Product Purpose
 
-Nika é um app de bandeja do Windows que troca o IP de saída de aplicativos. Começou como proxy Tor; desde o bloqueio de Go Live e vídeo do Discord no Brasil (agosto de 2026), passou a oferecer uma **saída própria só para o Discord**: um túnel WireGuard até uma VM do próprio dono, pelo qual passam TCP e UDP dos processos do Discord, e nada mais do PC. Sucesso: o Go Live anda (`receiver count: 1`) para o dono e para cada convidado, sem ninguém configurar rota, DNS ou firewall.
+Nika é um app de bandeja do Windows com um único trabalho: fazer o Discord sair por outro IP. Desde o bloqueio de Go Live e vídeo no Brasil (agosto de 2026), isso significa um túnel WireGuard até uma VM do dono, pelo qual passam TCP e UDP dos processos do Discord, e nada mais do PC. Sucesso: o Go Live anda (`receiver count: 1`) para o dono e para cada convidado, sem ninguém configurar rota, DNS ou firewall. (A primeira versão era um proxy Tor; foi removida em outubro de 2026 porque não alcançava a mídia.)
 
 ## Positioning
 
@@ -30,8 +29,6 @@ Só o tráfego do Discord sai pela VM, por processo, sem adaptador de rede nem V
 
 ## Capabilities and Constraints
 
-- Proxy Tor (SOCKS5/HTTP) com bandeja, autostart, nova identidade, circuito.
-- Proxy no Discord via `version.dll` própria (TCP só).
 - Túnel do Discord: importar perfil, ligar/desligar, estado (handshake, tráfego, fluxos), esquecer perfil, reabrir elevado, ligar ao abrir. Spec em `docs/discord-tunnel.md`.
 - Gestão de convidados fica fora do app, no terminal (decisão de produto: menos segredo e menos superfície no app).
 - Não é anonimato. A UI diz isso sempre.
@@ -45,7 +42,7 @@ Só o tráfego do Discord sai pela VM, por processo, sem adaptador de rede nem V
 
 ## Evidence on Hand
 
-- Logs reais do bloqueio e da solução (`docs/discord-tunnel.md` §1, memória do projeto).
+- Logs reais do bloqueio e da solução (`docs/discord-tunnel.md` §1).
 - Scripts de servidor validados até a rede (VM pendente de capacidade na Oracle em 2026-10-20).
 - Nenhum depoimento, número de usuários ou benchmark: não inventar.
 

@@ -26,7 +26,10 @@ impl Proto {
 
 /// Versão do IP no primeiro nibble; o que não é 4 nem 6 não nos interessa.
 pub fn ip_version(packet: &[u8]) -> Option<u8> {
-    packet.first().map(|b| b >> 4).filter(|v| *v == 4 || *v == 6)
+    packet
+        .first()
+        .map(|b| b >> 4)
+        .filter(|v| *v == 4 || *v == 6)
 }
 
 /// Cabeçalhos de um pacote IPv4 TCP/UDP, já validados contra o tamanho.
@@ -137,8 +140,8 @@ pub fn clamp_mss(packet: &mut [u8], headers: &Headers, max_mss: u16) -> bool {
     let end = tcp + data_offset;
     while i < end {
         match packet[i] {
-            0 => break,    // fim das opções
-            1 => i += 1,   // NOP
+            0 => break,  // fim das opções
+            1 => i += 1, // NOP
             kind => {
                 if i + 1 >= end {
                     break;
@@ -269,7 +272,14 @@ mod tests {
     use super::*;
 
     /// Monta um pacote IPv4 + TCP/UDP com checksums corretos, por cálculo completo.
-    fn build(proto: Proto, src: Ipv4Addr, dst: Ipv4Addr, tcp_flags: u8, options: &[u8], payload: &[u8]) -> Vec<u8> {
+    fn build(
+        proto: Proto,
+        src: Ipv4Addr,
+        dst: Ipv4Addr,
+        tcp_flags: u8,
+        options: &[u8],
+        payload: &[u8],
+    ) -> Vec<u8> {
         let transport_len = match proto {
             Proto::Tcp => 20 + options.len(),
             Proto::Udp => 8,
@@ -280,7 +290,10 @@ mod tests {
         p[2..4].copy_from_slice(&(total as u16).to_be_bytes());
         p[6] = 0x40; // DF
         p[8] = 64;
-        p[9] = match proto { Proto::Tcp => 6, Proto::Udp => 17 };
+        p[9] = match proto {
+            Proto::Tcp => 6,
+            Proto::Udp => 17,
+        };
         p[12..16].copy_from_slice(&src.octets());
         p[16..20].copy_from_slice(&dst.octets());
         let ipc = checksum(&p[..20]);
@@ -302,7 +315,10 @@ mod tests {
             }
         }
         let tc = transport_checksum(&p);
-        let off = t + match proto { Proto::Tcp => 16, Proto::Udp => 6 };
+        let off = t + match proto {
+            Proto::Tcp => 16,
+            Proto::Udp => 6,
+        };
         p[off..off + 2].copy_from_slice(&tc.to_be_bytes());
         p
     }
@@ -312,7 +328,11 @@ mod tests {
     fn transport_checksum(p: &[u8]) -> u16 {
         let h = parse(p).unwrap();
         let mut copy = p.to_vec();
-        let off = h.ip_header_len + match h.proto { Proto::Tcp => 16, Proto::Udp => 6 };
+        let off = h.ip_header_len
+            + match h.proto {
+                Proto::Tcp => 16,
+                Proto::Udp => 6,
+            };
         copy[off] = 0;
         copy[off + 1] = 0;
         let transport = &copy[h.ip_header_len..h.total_len];
@@ -334,7 +354,11 @@ mod tests {
             // Simula o que a placa receberia: checksums lixo.
             p[10] = 0xde;
             p[11] = 0xad;
-            let off = h.ip_header_len + match proto { Proto::Tcp => 16, Proto::Udp => 6 };
+            let off = h.ip_header_len
+                + match proto {
+                    Proto::Tcp => 16,
+                    Proto::Udp => 6,
+                };
             p[off] = 0xbe;
             p[off + 1] = 0xef;
             recompute_ip_checksum(&mut p, &h);
@@ -350,7 +374,11 @@ mod tests {
 
     fn transport_checksum_ok(p: &[u8]) -> bool {
         let h = parse(p).unwrap();
-        let off = h.ip_header_len + match h.proto { Proto::Tcp => 16, Proto::Udp => 6 };
+        let off = h.ip_header_len
+            + match h.proto {
+                Proto::Tcp => 16,
+                Proto::Udp => 6,
+            };
         let stored = u16::from_be_bytes([p[off], p[off + 1]]);
         stored == transport_checksum(p)
     }

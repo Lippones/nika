@@ -1,9 +1,4 @@
-import { useState } from "react";
-
-import { Circuit } from "./components/Circuit";
 import { Disclaimer } from "./components/Disclaimer";
-import { DiscordProxy } from "./components/DiscordProxy";
-import { Endpoints } from "./components/Endpoints";
 import { LogPanel } from "./components/LogPanel";
 import { Onboarding } from "./components/Onboarding";
 import { Preferences } from "./components/Preferences";
@@ -11,24 +6,13 @@ import { Stub } from "./components/Stub";
 import { Tunnel } from "./components/Tunnel";
 import { useAction } from "./hooks/useAction";
 import { useConfig } from "./hooks/useConfig";
-import { useDiscord } from "./hooks/useDiscord";
-import { useTorStatus } from "./hooks/useTorStatus";
 import { useTunnel } from "./hooks/useTunnel";
 import { api } from "./lib/ipc";
 
 export default function App() {
-  const status = useTorStatus();
   const { config, save, saving, error: configError } = useConfig();
-  const action = useAction();
-  const discord = useDiscord();
   const tunnel = useTunnel();
-  const [identityNote, setIdentityNote] = useState(false);
-
-  async function newIdentity() {
-    setIdentityNote(false);
-    await action.run(api.newIdentity);
-    setIdentityNote(true);
-  }
+  const action = useAction();
 
   // Enquanto a config não carrega, nada de janela: um flash da tela principal
   // seguido do onboarding seria pior que meio segundo de vazio.
@@ -36,14 +20,7 @@ export default function App() {
 
   if (!config.onboarded) {
     return (
-      <Onboarding
-        status={status}
-        discord={discord.status}
-        discordLoading={discord.loading}
-        tunnel={tunnel.status}
-        config={config}
-        onFinish={() => save({ ...config, onboarded: true })}
-      />
+      <Onboarding tunnel={tunnel.status} onFinish={() => save({ ...config, onboarded: true })} />
     );
   }
 
@@ -51,40 +28,15 @@ export default function App() {
     <div className="stage">
       <main className="ticket">
         <Stub
-          status={status}
+          status={tunnel.status}
           pending={action.pending}
-          onConnect={() => void action.run(api.connect)}
-          onDisconnect={() => void action.run(api.disconnect)}
-          onNewIdentity={() => void newIdentity()}
+          error={action.error}
+          onStart={() => void action.run(api.tunnelStart)}
+          onStop={() => void action.run(api.tunnelStop)}
+          onRelaunchElevated={() => void action.run(api.relaunchElevated)}
         />
 
         <div className="perf" />
-
-        {(action.error || (identityNote && !action.error)) && (
-          <section className="band">
-            {action.error ? (
-              <p className="notice">
-                <strong>A ação não foi concluída</strong>
-                {action.error}
-              </p>
-            ) : (
-              <p className="notice">
-                <strong>Circuito novo pedido</strong>
-                Conexões já abertas seguem no circuito antigo até serem refeitas.
-              </p>
-            )}
-          </section>
-        )}
-
-        <Endpoints config={config} />
-
-        <DiscordProxy
-          status={discord.status}
-          loading={discord.loading}
-          connected={status.phase === "connected"}
-          config={config}
-          onSave={(next) => void save(next)}
-        />
 
         <Tunnel
           status={tunnel.status}
@@ -92,8 +44,6 @@ export default function App() {
           config={config}
           onSave={(next) => void save(next)}
         />
-
-        <Circuit status={status} />
 
         <Preferences
           config={config}

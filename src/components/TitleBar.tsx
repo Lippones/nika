@@ -16,7 +16,7 @@ interface TitleBarProps {
 export function TitleBar({ right }: TitleBarProps) {
   return (
     <header className="bar" data-tauri-drag-region>
-      <span className="bar__brand">Nika · Proxy Tor</span>
+      <span className="bar__brand">Nika · Saída do Discord</span>
       <div className="bar__tools">
         {right}
         <WindowControls />

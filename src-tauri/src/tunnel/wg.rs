@@ -221,7 +221,8 @@ impl Link {
     }
 
     async fn pump_handshake(&mut self, buf: &mut [u8]) {
-        if let TunnResult::WriteToNetwork(data) = self.tunn.format_handshake_initiation(buf, false) {
+        if let TunnResult::WriteToNetwork(data) = self.tunn.format_handshake_initiation(buf, false)
+        {
             let data = data.to_vec();
             self.send_to_endpoint(&data).await;
         }
@@ -321,8 +322,12 @@ mod tests {
         let a = Link::bind(&profile(a_secret, b_public, "127.0.0.1:9".parse().unwrap()))
             .await
             .unwrap();
-        let a_addr: SocketAddr = format!("127.0.0.1:{}", a.local_port().unwrap()).parse().unwrap();
-        let b = Link::bind(&profile(b_secret, a_public, a_addr)).await.unwrap();
+        let a_addr: SocketAddr = format!("127.0.0.1:{}", a.local_port().unwrap())
+            .parse()
+            .unwrap();
+        let b = Link::bind(&profile(b_secret, a_public, a_addr))
+            .await
+            .unwrap();
 
         let (a_out_tx, a_out_rx) = mpsc::channel(16);
         let (a_in_tx, mut a_in_rx) = mpsc::channel(16);

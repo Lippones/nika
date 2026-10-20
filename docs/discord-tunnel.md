@@ -2,8 +2,8 @@
 
 **Status:** Em implementação (Fase 5); ver §14
 **Data:** 2026-10-19
-**Depende de:** PRD §4 (não-objetivos), docs/discord-proxy.md (shim), `server/` (lado servidor)
-**Numeração:** RF-50 em diante, continuando docs/discord-dll.md. Decisões são T-xx.
+**Depende de:** PRODUCT.md, `server/` (lado servidor)
+**Numeração:** RF-50 em diante, continuando a numeração do PRD original (RF-01 a RF-49 eram do proxy Tor, removido em 2026-10-20). Decisões são T-xx.
 
 ---
 
@@ -69,11 +69,11 @@ Discord.exe ◀──pacote IP──  [WinDivert inject] ◀── Nika ◀─�
 | T-04 | NAT 1:1 por `(proto, porta local)` | Um socket UDP do Discord fala com vários servidores; a chave pela porta local cobre todos e sobrevive à troca de servidor de voz |
 | T-05 | Só destinos **públicos** IPv4 vão para o túnel | DNS para o roteador da LAN, mDNS, broadcast e RPC local precisam continuar saindo pela rede local |
 | T-06 | IPv6 do Discord é **descartado** enquanto o túnel está ligado | A VM não tem IPv6 público e o servidor já recusa v6 no túnel. Descartar faz o Chromium cair para IPv4 (Happy Eyeballs). Injetar RST é melhoria futura |
-| T-07 | `WinDivert.dll` carregada **dinamicamente** (`LoadLibrary`), sem import estático nem `.lib` | O Nika precisa subir, e compilar no Linux, mesmo sem o driver. Faltou a DLL → a faixa diz "componente ausente", como o shim |
+| T-07 | `WinDivert.dll` carregada **dinamicamente** (`LoadLibrary`), sem import estático nem `.lib` | O Nika precisa subir, e compilar no Linux, mesmo sem o driver. Faltou a DLL → a faixa diz "componente ausente" |
 | T-08 | Elevação: o Nika **se relança como administrador** quando o usuário liga o túnel | `WinDivertOpen` exige admin. Um serviço separado é a solução de longo prazo; relançar é o mínimo que funciona. A chave `Run` não eleva: com autostart o túnel só sobe depois de um clique |
-| T-09 | O shim do Discord (`version.dll`) **não é necessário** neste modo | O túnel pega TCP e UDP. Os dois modos coexistem: quem quer Tor para texto segue com o shim; quem quer Go Live liga o túnel |
+| T-09 | O proxy Tor e o shim do Discord (`version.dll`) **saem do produto** | O túnel pega TCP e UDP; o shim só alcançava TCP e dependia do Tor. Removidos em 2026-10-20, ficam no histórico do git |
 | T-10 | O perfil fica em arquivo próprio (`tunnel.conf`), não dentro do `config.json` | Contém a chave privada; separar deixa claro o que é segredo e permite importar/apagar sem tocar no resto |
-| T-11 | Driver e DLL empacotados como recurso, com SHA-256 fixado em `scripts/windivert.lock.json` | Mesmo controle do Tor Expert Bundle (docs/tor-bundle.md): fonte oficial, bytes conferidos |
+| T-11 | Driver e DLL empacotados como recurso, com SHA-256 fixado em `scripts/windivert.lock.json` | Fonte oficial, bytes conferidos; o lock só muda por decisão de uma pessoa |
 | T-12 | MSS de TCP clampado no Nika para `MTU − 40`, além do clamp no servidor | Pacote maior que o túnel não passa; clampar nos dois lados é barato e evita depender de ICMP |
 
 ## 4. O que o usuário precisa saber (vai na UI)
@@ -112,7 +112,7 @@ Discord.exe ◀──pacote IP──  [WinDivert inject] ◀── Nika ◀─�
 
 | Item | Motivo |
 |---|---|
-| Rotear outros apps além do Discord | É o não-objetivo do PRD §4; o desenho permite, a UI não oferece |
+| Rotear outros apps além do Discord | Fora do propósito (PRODUCT.md); o desenho permite, a UI não oferece |
 | IPv6 pelo túnel | A VM não tem v6 público e o servidor recusa |
 | Verificar IP de saída pelo túnel | Exigiria pilha TCP própria no Nika. O IP de saída é o do endpoint (NAT 1:1 da Oracle), e a UI mostra isso |
 | Criar a VM a partir do Nika | Oracle exige console/Cloud Shell autenticado; `server/oracle-create.sh` roda lá |
@@ -274,22 +274,25 @@ convidado nunca vê terminal, chave ou IP além do que a faixa mostra. Sem aba:
 o bilhete é uma coluna, e o convite entra em dois lugares.
 
 **Onboarding** (`Onboarding.tsx`): a tela de boas-vindas oferece "Tenho um
-convite" como ação principal (quando o túnel é suportado), "Discord via Tor" e
-"Só o proxy". O passo do convite tem o campo compartilhado `InviteInput` (cola
+convite" como ação principal e "Ainda não". O passo do convite tem o campo compartilhado `InviteInput` (cola
 o `nika://convite/…` ou o `.conf`; o resumo "Convite para joao · Servidor
 Filipe · Santiago" aparece ao vivo, via `tunnel_preview`), três fatos (só
 Discord; admin; IP) e "Usar convite e ligar" — que grava, conclui o onboarding
 e, sem elevação, reabre como administrador com `--tunnel`.
 
-**Faixa "Saída do Discord"** (`Tunnel.tsx`), abaixo de "Proxy no Discord":
+**Talão** (`Stub.tsx`): o estado da saída em letras grandes (desligada ·
+ligando · no ar · falha · sem convite) e a ação: "Ligar", "Desligar" ou
+"Reabrir como administrador".
 
-- sem perfil: `InviteInput` + "Usar convite" (habilita só com convite lido)
-- com perfil: Estado · Servidor (rótulo · endpoint) · Convite (para quem) ·
-  Handshake · Tráfego · Fluxos; "Ligar"/"Desligar", "Esquecer convite"
+**Faixa "Convite"** (`Tunnel.tsx`), logo abaixo do talão:
+
+- sem convite: `InviteInput` + "Usar convite" (habilita só com convite lido)
+- com convite: Servidor (rótulo) · Endereço · Para (quem) · Handshake ·
+  Tráfego · Fluxos; "Esquecer convite" e o interruptor "Ligar ao abrir"
 - sem resposta há mais de 3 min: "o servidor pode estar desligado, ou o seu
   convite foi revogado; fale com quem te convidou" (o WireGuard não distingue)
 - sem elevação: aviso + "Reabrir como administrador"
-- componente ausente: aviso igual ao do shim
+- componente ausente: aviso com a receita (`fetch-windivert`)
 - aviso permanente: "não é anonimato; o Discord vê o IP do servidor de quem te
   convidou; nada mais do PC passa por ele"
 

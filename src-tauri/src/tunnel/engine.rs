@@ -138,7 +138,14 @@ impl Table {
         }
     }
 
-    fn nat_record(&self, proto: Proto, port: u16, local_ip: Ipv4Addr, if_idx: u32, sub_if_idx: u32) {
+    fn nat_record(
+        &self,
+        proto: Proto,
+        port: u16,
+        local_ip: Ipv4Addr,
+        if_idx: u32,
+        sub_if_idx: u32,
+    ) {
         let mut state = self.lock();
         let now = Instant::now();
         let fresh = state
@@ -158,9 +165,16 @@ impl Table {
         }
 
         // Faxina barata, no máximo uma vez por minuto.
-        if state.last_prune.map_or(true, |t| now.duration_since(t) > Duration::from_secs(60)) {
-            state.nat.retain(|_, e| now.duration_since(e.last_seen) < NAT_IDLE);
-            state.negative.retain(|_, t| now.duration_since(*t) < NEGATIVE_TTL);
+        if state
+            .last_prune
+            .map_or(true, |t| now.duration_since(t) > Duration::from_secs(60))
+        {
+            state
+                .nat
+                .retain(|_, e| now.duration_since(e.last_seen) < NAT_IDLE);
+            state
+                .negative
+                .retain(|_, t| now.duration_since(*t) < NEGATIVE_TTL);
             state.last_prune = Some(now);
         }
     }
@@ -199,9 +213,8 @@ impl Engine {
         let wg_port = link.local_port()?;
         let link_stats = link.stats_handle();
 
-        let network_filter = format!(
-            "outbound and !loopback and (tcp or (udp and udp.SrcPort != {wg_port}))"
-        );
+        let network_filter =
+            format!("outbound and !loopback and (tcp or (udp and udp.SrcPort != {wg_port}))");
         let network = Arc::new(api.open(&network_filter, divert::LAYER_NETWORK, 0)?);
         let socket = Arc::new(api.open(
             "tcp or udp",
@@ -330,7 +343,15 @@ fn network_loop(
         }
         let packet = &mut buf[..len];
 
-        let verdict = classify_outbound(packet, &addr, table, &outbound, tunnel_ip, mtu, &mut oversize_logged);
+        let verdict = classify_outbound(
+            packet,
+            &addr,
+            table,
+            &outbound,
+            tunnel_ip,
+            mtu,
+            &mut oversize_logged,
+        );
         if let Verdict::PassThrough = verdict {
             network.send(packet, &addr);
         }
@@ -382,7 +403,13 @@ fn classify_outbound(
     }
 
     let (if_idx, sub_if_idx) = addr.network();
-    table.nat_record(headers.proto, headers.src_port, headers.src, if_idx, sub_if_idx);
+    table.nat_record(
+        headers.proto,
+        headers.src_port,
+        headers.src,
+        if_idx,
+        sub_if_idx,
+    );
 
     let body = &mut packet[..headers.total_len];
     packet::clamp_mss(body, &headers, mtu.saturating_sub(40));

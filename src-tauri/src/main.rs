@@ -4,7 +4,7 @@
 fn main() {
     // RF-56: lançados como administrador pela instância comum, esperamos ela
     // sair antes de inicializar — o plugin de instância única não nos mataria
-    // só porque a antiga ainda está fechando o tor.
+    // só porque a antiga ainda está desligando a saída.
     let args: Vec<String> = std::env::args().collect();
     if let Some(pid) = args
         .windows(2)

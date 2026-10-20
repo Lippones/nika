@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Baixa o WinDivert (driver + DLL) e o instala em src-tauri/resources/windivert/.
 #
-# É o componente do túnel do Discord (docs/discord-tunnel.md T-07/T-11). Mesmo
-# desenho do fetch-tor.sh: a versão e os SHA-256 ficam fixados em
+# É o componente do túnel do Discord (docs/discord-tunnel.md T-07/T-11). A
+# versão e os SHA-256 ficam fixados em
 # scripts/windivert.lock.json e qualquer byte diferente é recusado. Não há
 # assinatura GPG do projeto para conferir; o que ancora a confiança é o próprio
 # driver ser assinado pela Microsoft (sem isso o Windows não o carregaria) e o

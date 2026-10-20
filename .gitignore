@@ -6,24 +6,14 @@ dist/
 src-tauri/target/
 src-tauri/gen/
 
-# Tor Expert Bundle: baixado por scripts/fetch-tor.ps1, nunca versionado
-# (ver docs/tor-bundle.md).
+# WinDivert (driver da saída do Discord): a pasta existe para o glob de recursos
+# do Tauri resolver; os binários vêm de scripts/fetch-windivert.* e ficam fora
+# do git (docs/discord-tunnel.md T-11).
 src-tauri/resources/*
 !src-tauri/resources/.gitkeep
-# O diretório do shim do Discord existe sempre (para o glob de recursos do Tauri
-# resolver mesmo sem o shim compilado); o version.dll em si é gerado e não vai.
-!src-tauri/resources/discord/
-!src-tauri/resources/discord/.gitkeep
-src-tauri/resources/discord/version.dll
-# Idem para o WinDivert (túnel do Discord): a pasta existe, os binários vêm de
-# scripts/fetch-windivert.* e ficam fora do git (docs/discord-tunnel.md T-11).
 !src-tauri/resources/windivert/
-!src-tauri/resources/windivert/.gitkeep
 src-tauri/resources/windivert/*
 !src-tauri/resources/windivert/.gitkeep
-
-# target do shim (crate fora do workspace)
-src-tauri/discord-shim/target/
 
 # Ícones: os derivados saem de `npm run icons`. A arte de origem
 # (src-tauri/icons/source/) é versionada — é dela que tudo é gerado.

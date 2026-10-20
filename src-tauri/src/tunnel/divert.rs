@@ -55,7 +55,8 @@ const EPT_S_NOT_REGISTERED: u32 = 1753;
 
 type FnOpen = unsafe extern "system" fn(*const c_char, u32, i16, u64) -> HANDLE;
 type FnRecv = unsafe extern "system" fn(HANDLE, *mut c_void, u32, *mut u32, *mut Address) -> BOOL;
-type FnSend = unsafe extern "system" fn(HANDLE, *const c_void, u32, *mut u32, *const Address) -> BOOL;
+type FnSend =
+    unsafe extern "system" fn(HANDLE, *const c_void, u32, *mut u32, *const Address) -> BOOL;
 type FnShutdown = unsafe extern "system" fn(HANDLE, u32) -> BOOL;
 type FnClose = unsafe extern "system" fn(HANDLE) -> BOOL;
 
@@ -225,8 +226,7 @@ impl Api {
     }
 
     pub fn open(self: &Arc<Self>, filter: &str, layer: u32, flags: u64) -> Result<Handle> {
-        let filter_c = CString::new(filter)
-            .map_err(|_| Error::Divert("filtro com NUL".into()))?;
+        let filter_c = CString::new(filter).map_err(|_| Error::Divert("filtro com NUL".into()))?;
         // SAFETY: string NUL-terminada; o handle é fechado no Drop.
         let raw = unsafe { (self.open)(filter_c.as_ptr(), layer, 0, flags) };
         if raw == INVALID_HANDLE_VALUE || raw.is_null() {
@@ -249,16 +249,16 @@ impl Drop for Api {
 fn open_error(code: u32, filter: &str) -> Error {
     match code {
         ERROR_ACCESS_DENIED => Error::NeedsElevation,
-        ERROR_FILE_NOT_FOUND => Error::Divert(
-            "WinDivert64.sys não está ao lado da WinDivert.dll".into(),
-        ),
+        ERROR_FILE_NOT_FOUND => {
+            Error::Divert("WinDivert64.sys não está ao lado da WinDivert.dll".into())
+        }
         ERROR_INVALID_PARAMETER => Error::Divert(format!("filtro inválido: {filter}")),
-        ERROR_INVALID_IMAGE_HASH => Error::Divert(
-            "o Windows recusou a assinatura do driver (WinDivert64.sys)".into(),
-        ),
-        ERROR_SERVICE_DOES_NOT_EXIST => Error::Divert(
-            "o serviço do driver sumiu durante a instalação; tente de novo".into(),
-        ),
+        ERROR_INVALID_IMAGE_HASH => {
+            Error::Divert("o Windows recusou a assinatura do driver (WinDivert64.sys)".into())
+        }
+        ERROR_SERVICE_DOES_NOT_EXIST => {
+            Error::Divert("o serviço do driver sumiu durante a instalação; tente de novo".into())
+        }
         EPT_S_NOT_REGISTERED => Error::Divert(
             "o serviço Base Filtering Engine (BFE) está parado; o driver depende dele".into(),
         ),
@@ -308,13 +308,21 @@ impl Handle {
         let mut addr = Address::zeroed();
         // SAFETY: a camada SOCKET aceita buffer nulo com tamanho zero.
         let ok = unsafe {
-            (self.api.recv)(self.raw, std::ptr::null_mut(), 0, std::ptr::null_mut(), &mut addr)
+            (self.api.recv)(
+                self.raw,
+                std::ptr::null_mut(),
+                0,
+                std::ptr::null_mut(),
+                &mut addr,
+            )
         };
         if ok == 0 {
             return match unsafe { GetLastError() } {
                 ERROR_NO_DATA => Ok(None),
                 ERROR_INSUFFICIENT_BUFFER => Ok(Some(addr)),
-                code => Err(Error::Divert(format!("WinDivertRecv (socket) falhou (erro {code})"))),
+                code => Err(Error::Divert(format!(
+                    "WinDivertRecv (socket) falhou (erro {code})"
+                ))),
             };
         }
         Ok(Some(addr))

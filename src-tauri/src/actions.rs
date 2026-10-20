@@ -4,46 +4,20 @@
 //! menu nunca divirjam.
 
 use tauri::AppHandle;
-use tauri_plugin_clipboard_manager::ClipboardExt;
 
-use crate::error::{Error, Result};
+use crate::error::Result;
 use crate::state::AppState;
-
-pub async fn connect(state: &AppState) -> Result<()> {
-    state.supervisor.start().await
-}
-
-pub async fn disconnect(state: &AppState) -> Result<()> {
-    state.supervisor.stop().await
-}
-
-/// RF-13. Vale lembrar na UI: conexões já abertas seguem no circuito antigo.
-pub async fn new_identity(state: &AppState) -> Result<()> {
-    state.control.require()?.signal("NEWNYM").await?;
-    state
-        .logs
-        .push("[nika] nova identidade solicitada (SIGNAL NEWNYM)");
-    Ok(())
-}
-
-pub fn copy(app: &AppHandle, text: &str) -> Result<()> {
-    app.clipboard().write_text(text.to_string()).map_err(|err| {
-        Error::other(format!(
-            "não consegui copiar para a área de transferência: {err}"
-        ))
-    })
-}
 
 /// RF-51. Mesmo caminho para o botão e para a bandeja.
 pub async fn tunnel_start(state: &AppState) -> Result<()> {
     state.tunnel.start().await?;
-    state.logs.push("[nika] saída própria do Discord ligada");
+    state.logs.push("[nika] saída do Discord ligada");
     Ok(())
 }
 
 pub async fn tunnel_stop(state: &AppState) -> Result<()> {
     state.tunnel.stop().await?;
-    state.logs.push("[nika] saída própria do Discord desligada");
+    state.logs.push("[nika] saída do Discord desligada");
     Ok(())
 }
 
@@ -53,14 +27,14 @@ pub async fn relaunch_elevated(app: AppHandle, state: &AppState) -> Result<()> {
     crate::tunnel::relaunch_elevated(&[crate::tunnel::START_FLAG.to_string()])?;
     state
         .logs
-        .push("[nika] reabrindo como administrador para ligar a saída própria");
+        .push("[nika] reabrindo como administrador para ligar a saída");
     quit(app, state).await;
     Ok(())
 }
 
-/// Encerra o tor antes de derrubar o app, para não depender só do Job Object.
+/// Desliga a saída antes de derrubar o app: fechar os handles do WinDivert
+/// descarrega o driver de forma limpa (RF-58).
 pub async fn quit(app: AppHandle, state: &AppState) {
     let _ = state.tunnel.stop().await;
-    state.supervisor.shutdown().await;
     app.exit(0);
 }

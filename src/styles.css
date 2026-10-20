@@ -5,8 +5,8 @@
    campos rotulados em caixa alta e um selo. Nada de cor de acento — a hierarquia
    é feita de fios de 1px, entrelinha e uma única inversão (#F5F5F5 sobre
    #191919) reservada à ação principal. Monoespaçada em tudo, porque tudo aqui é
-   dado técnico: portas, fingerprints, países, bytes. A Inter Tight aparece uma
-   única vez, no estado do proxy.
+   dado técnico: endereços, chaves, bytes. A Inter Tight aparece uma única vez,
+   no estado da saída.
 --------------------------------------------------------------------------- */
 
 @font-face {
@@ -265,13 +265,11 @@ p {
   background: var(--t-dim);
 }
 
-.dot--connected {
+.dot--up {
   background: var(--t-base);
 }
 
-.dot--starting,
-.dot--bootstrapping,
-.dot--retrying {
+.dot--starting {
   background: var(--t-2);
   animation: breathe 1.6s ease-in-out infinite;
 }
@@ -1070,7 +1068,7 @@ button.copy:hover:not(:disabled) {
   color: var(--t-3);
 }
 
-/* Gate do Tor: a linha que diz se o proxy já subiu. O install espera nela. */
+/* Gate: a linha de estado que precede uma ação. */
 .gate {
   display: flex;
   align-items: center;

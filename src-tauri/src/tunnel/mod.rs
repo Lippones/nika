@@ -28,9 +28,9 @@ use engine::Engine;
 #[cfg(not(windows))]
 mod fallback;
 #[cfg(not(windows))]
-pub use fallback::{is_elevated, relaunch_elevated, wait_for_pid};
-#[cfg(not(windows))]
 use fallback::Engine;
+#[cfg(not(windows))]
+pub use fallback::{is_elevated, relaunch_elevated, wait_for_pid};
 
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
@@ -165,6 +165,7 @@ impl TunnelStore {
             guard.status.clone()
         };
 
+        crate::tray::apply(&self.app, &snapshot);
         if let Err(err) = self.app.emit(EVENT_TUNNEL, &snapshot) {
             log::warn!("falha ao emitir {EVENT_TUNNEL}: {err}");
         }
@@ -210,7 +211,7 @@ impl TunnelStore {
     /// RF-60.
     pub fn forget(&self) -> Result<TunnelStatus> {
         if self.is_running() {
-            return Err(Error::other("desligue o túnel antes de esquecer o perfil"));
+            return Err(Error::other("desligue a saída antes de esquecer o convite"));
         }
         match std::fs::remove_file(self.profile_path.as_path()) {
             Ok(()) => {}

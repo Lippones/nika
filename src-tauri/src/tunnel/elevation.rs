@@ -22,7 +22,7 @@ use windows_sys::Win32::UI::Shell::ShellExecuteW;
 use crate::error::{Error, Result};
 
 const SW_SHOWNORMAL: i32 = 1;
-/// Quanto a instância nova espera a antiga sumir. Ela está só fechando o tor.
+/// Quanto a instância nova espera a antiga sumir. Ela está só desligando a saída.
 const HANDOFF_TIMEOUT_MS: u32 = 15_000;
 
 pub fn is_elevated() -> bool {
@@ -99,5 +99,8 @@ pub fn wait_for_pid(pid: u32) {
 }
 
 fn wide(text: impl AsRef<OsStr>) -> Vec<u16> {
-    text.as_ref().encode_wide().chain(std::iter::once(0)).collect()
+    text.as_ref()
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect()
 }

@@ -1,5 +1,13 @@
 # PRD — Tor Tray (nome provisório)
 
+> **Histórico.** Este PRD descreve o Nika original: um proxy Tor na bandeja
+> (Fases 1 a 4). Em outubro de 2026 o Tor e o proxy no Discord foram removidos:
+> não destravavam a mídia do Discord, que era o problema real. O produto atual
+> é a Fase 5 — saída do Discord por túnel WireGuard entre amigos — descrita em
+> [PRODUCT.md](PRODUCT.md) e [docs/discord-tunnel.md](docs/discord-tunnel.md).
+> O texto abaixo fica como registro das decisões que levaram até lá.
+
+
 **Status:** Draft
 **Data:** 2026-08-17
 **Autor:** Filipe Vieira

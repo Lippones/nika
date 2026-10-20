@@ -17,7 +17,9 @@ use windows_sys::Win32::System::Threading::{
 };
 
 use super::packet::Proto;
-use crate::discord::Flavor;
+
+/// Os três sabores do app do Discord no Windows, em minúsculas.
+pub const DISCORD_EXES: [&str; 3] = ["discord.exe", "discordcanary.exe", "discordptb.exe"];
 
 const ERROR_INSUFFICIENT_BUFFER: u32 = 122;
 const NO_ERROR: u32 = 0;
@@ -53,7 +55,7 @@ pub fn process_name(pid: u32) -> Option<String> {
 
 pub fn is_discord(pid: u32) -> bool {
     process_name(pid)
-        .map(|name| Flavor::from_exe_name(&name).is_some())
+        .map(|name| DISCORD_EXES.contains(&name.as_str()))
         .unwrap_or(false)
 }
 
@@ -88,18 +90,32 @@ struct RowLayout {
     pid: usize,
 }
 
-const UDP4: RowLayout = RowLayout { size: 12, port: 4, pid: 8 };
-const UDP6: RowLayout = RowLayout { size: 28, port: 20, pid: 24 };
-const TCP4: RowLayout = RowLayout { size: 24, port: 8, pid: 20 };
-const TCP6: RowLayout = RowLayout { size: 56, port: 20, pid: 52 };
+const UDP4: RowLayout = RowLayout {
+    size: 12,
+    port: 4,
+    pid: 8,
+};
+const UDP6: RowLayout = RowLayout {
+    size: 28,
+    port: 20,
+    pid: 24,
+};
+const TCP4: RowLayout = RowLayout {
+    size: 24,
+    port: 8,
+    pid: 20,
+};
+const TCP6: RowLayout = RowLayout {
+    size: 56,
+    port: 20,
+    pid: 52,
+};
 
 fn udp_table(af: u32, out: &mut Vec<PortOwner>) {
     let layout = if af == AF_INET as u32 { UDP4 } else { UDP6 };
     // SAFETY: o padrão documentado — primeira chamada mede, segunda preenche.
     let buffer = unsafe {
-        grow_and_fill(|ptr, size| {
-            GetExtendedUdpTable(ptr, size, 0, af, UDP_TABLE_OWNER_PID, 0)
-        })
+        grow_and_fill(|ptr, size| GetExtendedUdpTable(ptr, size, 0, af, UDP_TABLE_OWNER_PID, 0))
     };
     if let Some(buffer) = buffer {
         parse_rows(&buffer, &layout, Proto::Udp, out);
@@ -110,9 +126,7 @@ fn tcp_table(af: u32, out: &mut Vec<PortOwner>) {
     let layout = if af == AF_INET as u32 { TCP4 } else { TCP6 };
     // SAFETY: idem.
     let buffer = unsafe {
-        grow_and_fill(|ptr, size| {
-            GetExtendedTcpTable(ptr, size, 0, af, TCP_TABLE_OWNER_PID_ALL, 0)
-        })
+        grow_and_fill(|ptr, size| GetExtendedTcpTable(ptr, size, 0, af, TCP_TABLE_OWNER_PID_ALL, 0))
     };
     if let Some(buffer) = buffer {
         parse_rows(&buffer, &layout, Proto::Tcp, out);
