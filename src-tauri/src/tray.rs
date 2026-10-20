@@ -19,6 +19,8 @@ mod id {
     pub const NEW_IDENTITY: &str = "new-identity";
     pub const COPY_SOCKS: &str = "copy-socks";
     pub const COPY_HTTP: &str = "copy-http";
+    pub const TUNNEL_START: &str = "tunnel-start";
+    pub const TUNNEL_STOP: &str = "tunnel-stop";
     pub const QUIT: &str = "quit";
 }
 
@@ -42,6 +44,22 @@ pub fn build(app: &AppHandle) -> Result<()> {
     )?;
     let copy_socks = MenuItem::with_id(app, id::COPY_SOCKS, "Copiar SOCKS5", true, None::<&str>)?;
     let copy_http = MenuItem::with_id(app, id::COPY_HTTP, "Copiar HTTP", true, None::<&str>)?;
+    // RF-51: o túnel do Discord na bandeja. Os dois itens ficam sempre
+    // habilitados — o estado real é consultado na hora; erro vai para o log.
+    let tunnel_start = MenuItem::with_id(
+        app,
+        id::TUNNEL_START,
+        "Ligar saída do Discord",
+        true,
+        None::<&str>,
+    )?;
+    let tunnel_stop = MenuItem::with_id(
+        app,
+        id::TUNNEL_STOP,
+        "Desligar saída do Discord",
+        true,
+        None::<&str>,
+    )?;
     let quit = MenuItem::with_id(app, id::QUIT, "Sair", true, None::<&str>)?;
 
     let menu = Menu::with_items(
@@ -55,6 +73,9 @@ pub fn build(app: &AppHandle) -> Result<()> {
             &PredefinedMenuItem::separator(app)?,
             &copy_socks,
             &copy_http,
+            &PredefinedMenuItem::separator(app)?,
+            &tunnel_start,
+            &tunnel_stop,
             &PredefinedMenuItem::separator(app)?,
             &quit,
         ],
@@ -148,6 +169,9 @@ fn on_menu_event(app: &AppHandle, event: MenuEvent) {
         id::CONNECT => spawn(async move { actions::connect(&state).await }),
         id::DISCONNECT => spawn(async move { actions::disconnect(&state).await }),
         id::NEW_IDENTITY => spawn(async move { actions::new_identity(&state).await }),
+
+        id::TUNNEL_START => spawn(async move { actions::tunnel_start(&state).await }),
+        id::TUNNEL_STOP => spawn(async move { actions::tunnel_stop(&state).await }),
 
         id::QUIT => {
             tauri::async_runtime::spawn(async move { actions::quit(app, &state).await });

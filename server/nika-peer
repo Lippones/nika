@@ -1,0 +1,144 @@
+#!/usr/bin/env bash
+# Perfis da saída WireGuard do Nika: um por pessoa (quem transmite e quem assiste).
+#
+#   sudo nika-peer add <nome>      cria o convite (ou mostra o que já existe)
+#   sudo nika-peer show <nome>     imprime o convite de novo
+#   sudo nika-peer list            nomes, IPs e último handshake
+#   sudo nika-peer remove <nome>   revoga o acesso na hora
+#
+# O que sai é um perfil WireGuard comum, com duas linhas de comentário que o
+# Nika mostra na tela (`# Nika-Server:` e `# Nika-Peer:`), e logo abaixo o
+# mesmo perfil como **convite de uma linha** (`nika://convite/...`): é essa
+# linha que se manda por mensagem; ela não quebra e o Nika a aceita colada.
+# O perfil também funciona no app oficial do WireGuard como VPN completa —
+# mas aí todo o tráfego da pessoa sai no IP do dono, então convite é só para
+# gente de confiança, e só para usar no Nika.
+set -euo pipefail
+
+[ "$(id -u)" -eq 0 ] || exec sudo bash "$0" "$@"
+
+conf=/etc/wireguard/wg0.conf
+peers=/etc/nika/peers
+net4=10.66.0
+net6=fd4e:696b:61
+mtu=1380
+
+usage() { sed -n '2,8p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
+
+valid_name() {
+  [[ "$1" =~ ^[a-z0-9][a-z0-9-]{0,31}$ ]] || {
+    echo "nome inválido: use minúsculas, números e hífen (até 32)" >&2
+    exit 2
+  }
+}
+
+next_host() {
+  local used n
+  used="$(grep -oE "AllowedIPs = $net4\.[0-9]+" "$conf" | grep -oE '[0-9]+$' || true)"
+  for n in $(seq 2 254); do
+    grep -qx "$n" <<<"$used" || { echo "$n"; return; }
+  done
+  echo "sem endereço livre na faixa $net4.0/24" >&2
+  exit 1
+}
+
+# Rótulo do servidor, definido no install.sh ("Filipe · Santiago"). É o que o
+# convidado vê como "servidor de quem".
+server_label() { cat /etc/nika/label 2>/dev/null || hostname; }
+
+# Imprime o perfil e, abaixo, o convite de uma linha (base64url, sem `=`).
+print_invite() {
+  cat "$1"
+  echo
+  echo "# Convite de uma linha — mande isto por mensagem:"
+  printf 'nika://convite/%s\n' "$(base64 -w0 < "$1" | tr '+/' '-_' | tr -d '=')"
+}
+
+cmd_add() {
+  local name="$1" host priv pub psk
+  valid_name "$name"
+  if [ -f "$peers/$name.conf" ]; then
+    print_invite "$peers/$name.conf"
+    return
+  fi
+
+  host="$(next_host)"
+  priv="$(wg genkey)"
+  pub="$(wg pubkey <<<"$priv")"
+  psk="$(wg genpsk)"
+
+  # Marcadores delimitam o bloco para o remove apagar só ele.
+  cat >> "$conf" <<EOF
+
+# nika-peer: $name
+[Peer]
+PublicKey = $pub
+PresharedKey = $psk
+AllowedIPs = $net4.$host/32, $net6::$host/128
+# fim nika-peer: $name
+EOF
+
+  wg set wg0 peer "$pub" preshared-key <(echo "$psk") \
+    allowed-ips "$net4.$host/32,$net6::$host/128"
+
+  (umask 077 && cat > "$peers/$name.conf" <<EOF
+# Nika-Server: $(server_label)
+# Nika-Peer: $name
+[Interface]
+PrivateKey = $priv
+Address = $net4.$host/32, $net6::$host/128
+DNS = 1.1.1.1
+MTU = $mtu
+
+[Peer]
+PublicKey = $(cat /etc/wireguard/server.pub)
+PresharedKey = $psk
+Endpoint = $(cat /etc/nika/endpoint)
+AllowedIPs = 0.0.0.0/0, ::/0
+PersistentKeepalive = 25
+EOF
+)
+  echo "$pub" > "$peers/$name.pub"
+  print_invite "$peers/$name.conf"
+}
+
+cmd_show() {
+  valid_name "$1"
+  [ -f "$peers/$1.conf" ] || { echo "perfil $1 não existe" >&2; exit 1; }
+  print_invite "$peers/$1.conf"
+}
+
+cmd_remove() {
+  local name="$1"
+  valid_name "$name"
+  [ -f "$peers/$name.pub" ] || { echo "perfil $name não existe" >&2; exit 1; }
+  wg set wg0 peer "$(cat "$peers/$name.pub")" remove
+  sed -i "/^# nika-peer: $name\$/,/^# fim nika-peer: $name\$/d" "$conf"
+  rm -f "$peers/$name.conf" "$peers/$name.pub"
+  echo "perfil $name revogado"
+}
+
+cmd_list() {
+  local f name pub ip seen
+  for f in "$peers"/*.pub; do
+    [ -e "$f" ] || { echo "nenhum perfil"; return; }
+    name="$(basename "$f" .pub)"
+    pub="$(cat "$f")"
+    ip="$(sed -n 's/^Address = \([0-9.]*\).*/\1/p' "$peers/$name.conf")"
+    seen="$(wg show wg0 latest-handshakes | awk -v k="$pub" '$1 == k {print $2}')"
+    if [ -n "$seen" ] && [ "$seen" != 0 ]; then
+      seen="$(date -d "@$seen" '+%d/%m %H:%M')"
+    else
+      seen="nunca"
+    fi
+    printf '%-20s %-15s %s\n' "$name" "$ip" "$seen"
+  done
+}
+
+case "${1:-}" in
+  add)    [ $# -eq 2 ] || usage; cmd_add "$2" ;;
+  show)   [ $# -eq 2 ] || usage; cmd_show "$2" ;;
+  remove) [ $# -eq 2 ] || usage; cmd_remove "$2" ;;
+  list)   cmd_list ;;
+  *)      usage ;;
+esac

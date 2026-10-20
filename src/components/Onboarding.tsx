@@ -1,10 +1,18 @@
 import { useState } from "react";
 
+import { InviteInput } from "./InviteInput";
 import { Seal } from "./Seal";
 import { TitleBar } from "./TitleBar";
+import { useInvitePreview } from "../hooks/useInvitePreview";
 import { api, errorMessage } from "../lib/ipc";
 import { PHASE_TAG } from "../lib/format";
-import { isActive, type Config, type DiscordStatus, type TorStatus } from "../lib/types";
+import {
+  isActive,
+  type Config,
+  type DiscordStatus,
+  type TorStatus,
+  type TunnelStatus,
+} from "../lib/types";
 import cloud from "../assets/cloud.png";
 
 interface OnboardingProps {
@@ -12,10 +20,31 @@ interface OnboardingProps {
   discord: DiscordStatus;
   /** Uma varredura ainda não voltou — evita piscar "não encontrei o Discord". */
   discordLoading: boolean;
+  tunnel: TunnelStatus;
   config: Config;
-  /** Marca `onboarded` e leva à janela principal. */
-  onFinish: () => void;
+  /**
+   * Marca `onboarded` e leva à janela principal. Devolve a promise da gravação
+   * porque o caminho do convite reabre o app elevado logo depois: a instância
+   * nova precisa encontrar a config já salva.
+   */
+  onFinish: () => Promise<void> | void;
 }
+
+/** O que muda ao usar um convite (docs/discord-tunnel.md §4). */
+const INVITE_FACTS = [
+  {
+    key: "Só Discord",
+    text: "Voz, vídeo e mensagens do Discord saem pelo servidor de quem te convidou. Nada mais do PC passa por ele.",
+  },
+  {
+    key: "Admin",
+    text: "Separar o Discord do resto exige um driver. O Nika reabre pedindo permissão (UAC) uma vez.",
+  },
+  {
+    key: "IP",
+    text: "O Discord passa a ver o IP do servidor, não o seu. Isso destrava o Go Live. Não é anonimato.",
+  },
+];
 
 /** Os avisos honestos da spec do Discord (docs/discord-dll.md §2, R-3). */
 const FACTS = [
@@ -46,15 +75,52 @@ export function Onboarding({
   status,
   discord,
   discordLoading,
+  tunnel,
   config,
   onFinish,
 }: OnboardingProps) {
-  const [step, setStep] = useState<"welcome" | "discord">("welcome");
+  // `?step=invite` existe só para o preview web (`npm run dev`) abrir direto no
+  // passo do convite; dentro do Tauri não há query string.
+  const [step, setStep] = useState<"welcome" | "invite" | "discord">(() =>
+    typeof location !== "undefined" &&
+    new URLSearchParams(location.search).get("step") === "invite"
+      ? "invite"
+      : "welcome",
+  );
   const [closeDiscord, setCloseDiscord] = useState(config.discord.allowClose);
   const [installing, setInstalling] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // `?invite=<texto>` idem: pré-preenche o campo no preview web.
+  const [invite, setInvite] = useState(() =>
+    typeof location !== "undefined"
+      ? (new URLSearchParams(location.search).get("invite") ?? "")
+      : "",
+  );
+  const preview = useInvitePreview(invite);
 
   const connected = status.phase === "connected";
+
+  /**
+   * Guarda o convite, conclui o onboarding e liga. Sem elevação, "ligar" é
+   * reabrir como administrador: este processo sai e o novo sobe com `--tunnel`.
+   */
+  async function useInvite() {
+    setInstalling(true);
+    setError(null);
+    try {
+      await api.tunnelImport(invite);
+      await onFinish();
+      if (tunnel.elevated) {
+        await api.tunnelStart();
+      } else {
+        await api.relaunchElevated();
+      }
+    } catch (failure) {
+      setError(errorMessage(failure));
+    } finally {
+      setInstalling(false);
+    }
+  }
 
   /** Ir ao Discord já conecta o Tor: a espera roda enquanto a pessoa lê. */
   function goToDiscord() {
@@ -91,11 +157,11 @@ export function Onboarding({
             <img className="onb__mark" src={cloud} alt="" />
             <span className="stub__eyebrow">Instalado</span>
             <h1 className="stub__title">
-              Discord <span>pela rede Tor</span>
+              Discord <span>sem bloqueio</span>
             </h1>
             <p className="onb__lead">
-              O Nika roteia o tráfego pela rede Tor. Configure o Discord ou use o
-              proxy com qualquer app.
+              Recebeu um convite de alguém com servidor? Ele traz o Go Live de volta.
+              Sem convite, o Nika leva o Discord pela rede Tor.
             </p>
           </div>
 
@@ -111,11 +177,111 @@ export function Onboarding({
           </section>
 
           <div className="onb__actions">
-            <button type="button" className="solid" onClick={goToDiscord}>
-              Configurar o Discord
-            </button>
-            <button type="button" className="ghost" onClick={onFinish}>
+            {tunnel.supported ? (
+              <>
+                <button type="button" className="solid" onClick={() => setStep("invite")}>
+                  Tenho um convite
+                </button>
+                <button type="button" onClick={goToDiscord}>
+                  Discord via Tor
+                </button>
+              </>
+            ) : (
+              <button type="button" className="solid" onClick={goToDiscord}>
+                Configurar o Discord
+              </button>
+            )}
+            <button type="button" className="ghost" onClick={() => void onFinish()}>
               Só o proxy
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (step === "invite") {
+    const ready = preview.profile !== null && tunnel.component === "ready";
+    const primaryLabel = installing
+      ? "Guardando convite…"
+      : tunnel.component !== "ready"
+        ? "Componente ausente"
+        : tunnel.elevated
+          ? "Usar convite e ligar"
+          : "Usar convite e reabrir como admin";
+
+    return (
+      <div className="stage">
+        <main className="ticket">
+          <TitleBar right={<span className="onb__step">Passo 2 de 2</span>} />
+
+          <div className="stub onb" style={{ minHeight: 200 }}>
+            <div className="stub__backdrop" aria-hidden />
+            <img className="onb__mark" src={cloud} alt="" style={{ width: 112, opacity: 0.7 }} />
+            <span className="stub__eyebrow">Passo 2 de 2 · Convite</span>
+            <h1 className="stub__title">
+              Entrar pelo <span>servidor de alguém</span>
+            </h1>
+            <span className="stub__est">
+              {preview.profile
+                ? `Convite lido · servidor ${preview.profile.serverLabel ?? preview.profile.endpoint}`
+                : "Cole o convite que você recebeu"}
+            </span>
+          </div>
+
+          <div className="perf" />
+
+          <section className="band">
+            <InviteInput
+              value={invite}
+              onChange={setInvite}
+              profile={preview.profile}
+              error={preview.error}
+              checking={preview.checking}
+            />
+          </section>
+
+          <section className="band">
+            <ul className="facts">
+              {INVITE_FACTS.map((fact) => (
+                <li key={fact.key} className="fact">
+                  <span className="fact__key">{fact.key}</span>
+                  <span className="fact__text">{fact.text}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          {tunnel.component !== "ready" && (
+            <section className="band">
+              <p className="notice">
+                <strong>Componente ausente.</strong>
+                Este build do Nika não inclui o driver WinDivert, então o convite
+                não pode ser usado aqui. Peça a quem te convidou o instalador completo.
+              </p>
+            </section>
+          )}
+
+          {error && (
+            <section className="band">
+              <p className="notice" role="alert">
+                <strong>Não deu para usar o convite.</strong>
+                {error}
+              </p>
+            </section>
+          )}
+
+          <div className="onb__actions">
+            <button
+              type="button"
+              className="solid"
+              disabled={!ready || installing}
+              onClick={() => void useInvite()}
+            >
+              {primaryLabel}
+            </button>
+            <button type="button" className="ghost" onClick={() => setStep("welcome")}>
+              Voltar
             </button>
           </div>
         </main>
@@ -261,7 +427,7 @@ export function Onboarding({
           >
             {primaryLabel}
           </button>
-          <button type="button" className="ghost" onClick={onFinish}>
+          <button type="button" className="ghost" onClick={() => void onFinish()}>
             Agora não
           </button>
         </div>

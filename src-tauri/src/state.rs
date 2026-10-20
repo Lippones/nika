@@ -11,6 +11,7 @@ use crate::discord::DiscordStore;
 use crate::logs::LogBuffer;
 use crate::supervisor::SupervisorHandle;
 use crate::tray;
+use crate::tunnel::TunnelStore;
 
 /// Nomes dos eventos empurrados para o webview. Espelhados em `src/lib/ipc.ts`.
 pub const EVENT_STATUS: &str = "nika://status";
@@ -153,4 +154,5 @@ pub struct AppState {
     pub control: ControlSlot,
     pub supervisor: SupervisorHandle,
     pub discord: DiscordStore,
+    pub tunnel: TunnelStore,
 }

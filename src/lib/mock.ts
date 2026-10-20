@@ -11,6 +11,8 @@ import type {
   ExitIp,
   TorStatus,
   Traffic,
+  TunnelProfile,
+  TunnelStatus,
 } from "./types";
 
 const BOOT: Array<[number, string]> = [
@@ -46,8 +48,48 @@ let config: Config = {
   autostart: true,
   autoConnect: false,
   discord: { mode: "off", reapplyOnStart: true, allowClose: true },
+  tunnel: { autoStart: false },
   onboarded: !PREVIEW_ONBOARDING,
 };
+
+/** Túnel: driver presente, processo elevado, perfil ainda não importado. */
+let tunnel: TunnelStatus = {
+  phase: "off",
+  component: "ready",
+  elevated: true,
+  supported: true,
+  profile: null,
+  lastHandshakeSecs: null,
+  txBytes: 0,
+  rxBytes: 0,
+  flows: 0,
+  error: null,
+};
+
+/** Aceita o convite de uma linha ou um .conf com `[Peer]`; o resto é erro. */
+function mockPreview(text: string): TunnelProfile {
+  const trimmed = text.trim();
+  if (!trimmed.startsWith("nika://convite/") && !trimmed.includes("[Peer]")) {
+    throw "o perfil WireGuard é inválido: falta PublicKey em [Peer]";
+  }
+  return {
+    address: "10.66.0.2",
+    endpoint: "203.0.113.9:51820",
+    peerPublicKey: "xTIBA5rboUvnH4htodjb6e697QjLERt1NAB4mZqp8Dg=",
+    mtu: 1380,
+    serverLabel: "Filipe · Santiago",
+    peerName: "joao",
+  };
+}
+
+const tunnelHandlers = new Set<(next: TunnelStatus) => void>();
+let tunnelTimer = 0;
+
+function pushTunnel(next: Partial<TunnelStatus>) {
+  tunnel = { ...tunnel, ...next };
+  tunnelHandlers.forEach((handler) => handler(tunnel));
+  return tunnel;
+}
 
 /** Um Discord estável instalado, componente já baixado, proxy desligado. */
 let discord: DiscordStatus = {
@@ -177,6 +219,31 @@ export const mockApi = {
   discordInstall: async (mode: DiscordMode) => pushDiscord(mode),
   discordUninstall: async () => pushDiscord("off"),
   discordRelaunch: async () => discord,
+  tunnelStatus: async () => tunnel,
+  tunnelPreview: async (text: string) => mockPreview(text),
+  tunnelImport: async (text: string) => pushTunnel({ error: null, profile: mockPreview(text) }),
+  tunnelForget: async () => pushTunnel({ profile: null, phase: "off" }),
+  tunnelStart: async () => {
+    if (!tunnel.profile) throw "nenhum perfil WireGuard importado — cole o .conf gerado pelo nika-peer";
+    pushTunnel({ phase: "starting", error: null });
+    window.clearInterval(tunnelTimer);
+    window.setTimeout(() => pushTunnel({ phase: "up", lastHandshakeSecs: 0 }), 600);
+    tunnelTimer = window.setInterval(() => {
+      if (tunnel.phase !== "up") return;
+      pushTunnel({
+        lastHandshakeSecs: (tunnel.lastHandshakeSecs ?? 0) + 1,
+        txBytes: tunnel.txBytes + 48_000,
+        rxBytes: tunnel.rxBytes + 210_000,
+        flows: Math.min(tunnel.flows + 1, 6),
+      });
+    }, 1000);
+    return tunnel;
+  },
+  tunnelStop: async () => {
+    window.clearInterval(tunnelTimer);
+    return pushTunnel({ phase: "off", flows: 0 });
+  },
+  relaunchElevated: async () => pushTunnel({ elevated: true }),
   copyText: async () => undefined,
   hideWindow: async () => undefined,
   minimizeWindow: async () => undefined,
@@ -196,6 +263,11 @@ export function mockOnLog(handler: (line: string) => void) {
 export function mockOnDiscord(handler: (next: DiscordStatus) => void) {
   discordHandlers.add(handler);
   return () => discordHandlers.delete(handler);
+}
+
+export function mockOnTunnel(handler: (next: TunnelStatus) => void) {
+  tunnelHandlers.add(handler);
+  return () => tunnelHandlers.delete(handler);
 }
 
 /** No preview web ninguém quer clicar em "Conectar" para ver o estado cheio. */

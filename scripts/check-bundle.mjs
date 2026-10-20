@@ -38,6 +38,19 @@ if (!existsSync(join(root, "src-tauri", "resources/discord/version.dll"))) {
   );
 }
 
+// O driver do túnel do Discord também é opcional: sem ele a faixa "Saída
+// própria do Discord" diz "componente ausente" (docs/discord-tunnel.md T-07).
+const windivert = ["WinDivert.dll", "WinDivert64.sys"].filter(
+  (file) => !existsSync(join(root, "src-tauri", "resources/windivert", file)),
+);
+if (windivert.length > 0) {
+  console.warn(
+    "\n  AVISO: o WinDivert (resources/windivert/) não está presente. O túnel do\n" +
+      "  Discord ficará indisponível neste build.\n" +
+      "  Para incluí-lo:  pwsh scripts/fetch-windivert.ps1   (ou scripts/fetch-windivert.sh)\n",
+  );
+}
+
 if (process.platform !== "win32") {
   console.warn(
     "\n  AVISO: build fora do Windows. O alvo do projeto é Windows e o binário do\n" +

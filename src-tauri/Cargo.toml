@@ -48,6 +48,13 @@ reqwest = { version = "0.12", default-features = false, features = [
 # só conta como nossa se o SHA-256 bater com o do shim empacotado (docs/discord-dll.md §6).
 sha2 = "0.10"
 
+# Saída própria para o Discord (docs/discord-tunnel.md): o protocolo WireGuard
+# em espaço de usuário. Sem a feature `device` — o Nika não cria adaptador, só
+# encapsula pacotes que o WinDivert lhe entrega.
+boringtun = { version = "0.7", default-features = false }
+# Chaves do perfil `.conf` (base64).
+base64 = "0.22"
+
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.59", features = [
   "Win32_Foundation",
@@ -57,6 +64,12 @@ windows-sys = { version = "0.59", features = [
   "Win32_System_Diagnostics_ToolHelp",
   "Win32_System_JobObjects",
   "Win32_System_Threading",
+  # Túnel (docs/discord-tunnel.md): dono de uma porta (GetExtended*Table),
+  # `ShellExecuteW` para relançar elevado, token para saber se já somos admin.
+  "Win32_NetworkManagement_IpHelper",
+  "Win32_Networking_WinSock",
+  "Win32_UI_Shell",
+  "Win32_UI_WindowsAndMessaging",
 ] }
 # Descoberta das pastas do Discord: só HKCU, porque o Discord instala por
 # usuário — é o que mantém a promessa de "sem admin" (RF-27).

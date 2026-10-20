@@ -42,6 +42,7 @@ jobs:
       - run: npm run icons
       - run: npm run build
       - run: pwsh scripts/fetch-tor.ps1
+      - run: pwsh scripts/fetch-windivert.ps1
 
       - run: cargo fmt --all --check
         working-directory: src-tauri

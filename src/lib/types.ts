@@ -27,8 +27,14 @@ export interface Config {
   autostart: boolean;
   autoConnect: boolean;
   discord: DiscordConfig;
+  tunnel: TunnelConfig;
   /** A janela de boas-vindas já foi concluída. `false` → a UI abre no onboarding. */
   onboarded: boolean;
+}
+
+/** Espelha `config::TunnelConfig`. */
+export interface TunnelConfig {
+  autoStart: boolean;
 }
 
 export interface DiscordConfig {
@@ -70,6 +76,35 @@ export interface DiscordStatus {
   stale: boolean;
 }
 
+/** Espelha `tunnel::Phase`. */
+export type TunnelPhase = "off" | "starting" | "up" | "failed";
+
+/** Espelha `tunnel::ProfileSummary` — nunca inclui a chave privada. */
+export interface TunnelProfile {
+  address: string;
+  endpoint: string;
+  peerPublicKey: string;
+  mtu: number;
+  /** `# Nika-Server:` — como o dono chamou a saída ("Filipe · Santiago"). */
+  serverLabel: string | null;
+  /** `# Nika-Peer:` — para quem o convite foi gerado. */
+  peerName: string | null;
+}
+
+/** Espelha `tunnel::TunnelStatus` (docs/discord-tunnel.md §7.1). */
+export interface TunnelStatus {
+  phase: TunnelPhase;
+  component: "missing" | "ready";
+  elevated: boolean;
+  supported: boolean;
+  profile: TunnelProfile | null;
+  lastHandshakeSecs: number | null;
+  txBytes: number;
+  rxBytes: number;
+  flows: number;
+  error: string | null;
+}
+
 export interface Relay {
   nickname: string;
   fingerprint: string;
@@ -97,6 +132,19 @@ export const INITIAL_STATUS: TorStatus = {
   summary: "carregando…",
   error: null,
   attempt: 0,
+};
+
+export const INITIAL_TUNNEL: TunnelStatus = {
+  phase: "off",
+  component: "missing",
+  elevated: false,
+  supported: true,
+  profile: null,
+  lastHandshakeSecs: null,
+  txBytes: 0,
+  rxBytes: 0,
+  flows: 0,
+  error: null,
 };
 
 export const INITIAL_DISCORD: DiscordStatus = {

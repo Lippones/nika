@@ -5,8 +5,8 @@ plano e deixa um **SOCKS5 em `127.0.0.1:9050`** e um **HTTP CONNECT em
 `127.0.0.1:9080`** prontos para qualquer aplicativo apontar — sem abrir o Tor
 Browser, sem driver, sem privilégio de administrador.
 
-Implementa a Fase 1 do [PRD](./PRD.md), mais o **proxy no Discord** (Fase 4 —
-ver abaixo).
+Implementa a Fase 1 do [PRD](./PRD.md), mais o **proxy no Discord** (Fase 4) e
+a **saída própria do Discord** por túnel WireGuard (Fase 5) — ver abaixo.
 
 > **Isto troca o seu IP, não te torna anônimo.** Para navegação anônima, use o
 > Tor Browser.
@@ -36,6 +36,46 @@ aberto e a porta — instalar e remover são um clique.
 
 Spec da DLL: [docs/discord-dll.md](docs/discord-dll.md). Descoberta de pastas,
 processo e instalar/remover: [docs/discord-proxy.md](docs/discord-proxy.md).
+
+---
+
+## Saída do Discord (túnel entre amigos)
+
+Desde agosto de 2026 o Discord bloqueia Go Live e vídeo no Brasil. O proxy acima
+destrava só a interface: a mídia sai do `discord_voice.node` por **UDP direto**,
+com o IP real, e o servidor de mídia recusa. Proxy HTTP e Tor não carregam UDP.
+
+A faixa **Saída do Discord** resolve isso com uma VPN **só para o Discord**: os
+pacotes TCP e UDP dos processos do Discord saem por uma VM na Oracle Cloud
+(plano grátis), e o resto do PC não é tocado. Uma pessoa sobe a VM e **convida**
+as outras:
+
+- **Dono:** cria a VM e os convites pelo terminal
+  ([docs/oracle-exit.md](docs/oracle-exit.md)). `nika-peer add <nome>` imprime um
+  convite de uma linha, `nika://convite/…`, um por pessoa; `nika-peer remove`
+  revoga na hora. Só quem tem convite entra.
+- **Convidado:** instala o Nika, cola o convite na primeira tela (ou na faixa) e
+  aceita o UAC. Nada de terminal ([docs/convite.md](docs/convite.md)).
+
+- **Como:** o driver [WinDivert](https://github.com/basil00/WinDivert) (assinado,
+  LGPL) entrega ao Nika só os pacotes dos processos do Discord; o Nika troca o IP
+  de origem, encapsula em WireGuard (`boringtun`, em espaço de usuário, sem
+  adaptador) e manda para a VM. As respostas voltam pelo mesmo caminho.
+- **Servidor:** `server/oracle-create.sh` (Cloud Shell) + `server/install.sh` +
+  `server/nika-peer add <nome>` — passo a passo em
+  [docs/oracle-exit.md](docs/oracle-exit.md).
+- **Precisa de administrador** (o driver). O Nika reabre pedindo UAC quando
+  você liga o túnel.
+- **Não é anonimato:** a VM é sua. O Discord passa a ver o IP dela.
+
+Driver no bundle: `pwsh scripts/fetch-windivert.ps1` (ou `.sh`), com SHA-256
+fixado em `scripts/windivert.lock.json`. Sem ele o build funciona e a faixa diz
+"componente ausente".
+
+> **Ainda não validado no Windows.** Perfil, NAT/checksums e o WireGuard têm
+> testes que rodam no Linux (inclusive um handshake real entre dois túneis); o
+> crate inteiro é type-checado no alvo Windows. O que toca o driver só se prova
+> no Windows — gates em [docs/discord-tunnel.md](docs/discord-tunnel.md) §13.
 
 ---
 

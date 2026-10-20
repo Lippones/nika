@@ -10,6 +10,7 @@ import {
   mockOnDiscord,
   mockOnLog,
   mockOnStatus,
+  mockOnTunnel,
   startMockPreview,
 } from "./mock";
 import type {
@@ -20,11 +21,14 @@ import type {
   ExitIp,
   TorStatus,
   Traffic,
+  TunnelProfile,
+  TunnelStatus,
 } from "./types";
 
 const EVENT_STATUS = "nika://status";
 const EVENT_LOG = "nika://log";
 const EVENT_DISCORD = "nika://discord";
+const EVENT_TUNNEL = "nika://tunnel";
 
 /** Fora do Tauri (ou seja, `npm run dev` no navegador) não existe core. */
 const IN_TAURI = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
@@ -46,6 +50,13 @@ const core = {
   discordUninstall: (closeDiscord: boolean, relaunch: boolean) =>
     invoke<DiscordStatus>("discord_uninstall", { closeDiscord, relaunch }),
   discordRelaunch: () => invoke<DiscordStatus>("discord_relaunch"),
+  tunnelStatus: () => invoke<TunnelStatus>("tunnel_status"),
+  tunnelPreview: (text: string) => invoke<TunnelProfile>("tunnel_preview", { text }),
+  tunnelImport: (text: string) => invoke<TunnelStatus>("tunnel_import", { text }),
+  tunnelForget: () => invoke<TunnelStatus>("tunnel_forget"),
+  tunnelStart: () => invoke<TunnelStatus>("tunnel_start"),
+  tunnelStop: () => invoke<TunnelStatus>("tunnel_stop"),
+  relaunchElevated: () => invoke<void>("relaunch_elevated"),
   copyText: (text: string) => invoke<void>("copy_text", { text }),
   hideWindow: () => invoke<void>("hide_window"),
   minimizeWindow: () => invoke<void>("minimize_window"),
@@ -71,6 +82,13 @@ export function onDiscord(
 ): Promise<UnlistenFn> {
   if (!IN_TAURI) return Promise.resolve(mockOnDiscord(handler) as UnlistenFn);
   return listen<DiscordStatus>(EVENT_DISCORD, (event) => handler(event.payload));
+}
+
+export function onTunnel(
+  handler: (status: TunnelStatus) => void,
+): Promise<UnlistenFn> {
+  if (!IN_TAURI) return Promise.resolve(mockOnTunnel(handler) as UnlistenFn);
+  return listen<TunnelStatus>(EVENT_TUNNEL, (event) => handler(event.payload));
 }
 
 /** O core serializa todo erro como string; qualquer outra coisa é bug nosso. */

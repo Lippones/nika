@@ -31,7 +31,13 @@
     "active": true,
     "targets": ["nsis"],
     "icon": ["icons/32x32.png", "icons/128x128.png", "icons/icon.ico"],
-    "resources": ["resources/geoip", "resources/geoip6", "resources/tor/*", "resources/discord/*"],
+    "resources": [
+      "resources/geoip",
+      "resources/geoip6",
+      "resources/tor/*",
+      "resources/discord/*",
+      "resources/windivert/*"
+    ],
     "windows": {
       "nsis": {
         "installMode": "currentUser",

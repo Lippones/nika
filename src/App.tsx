@@ -8,10 +8,12 @@ import { LogPanel } from "./components/LogPanel";
 import { Onboarding } from "./components/Onboarding";
 import { Preferences } from "./components/Preferences";
 import { Stub } from "./components/Stub";
+import { Tunnel } from "./components/Tunnel";
 import { useAction } from "./hooks/useAction";
 import { useConfig } from "./hooks/useConfig";
 import { useDiscord } from "./hooks/useDiscord";
 import { useTorStatus } from "./hooks/useTorStatus";
+import { useTunnel } from "./hooks/useTunnel";
 import { api } from "./lib/ipc";
 
 export default function App() {
@@ -19,6 +21,7 @@ export default function App() {
   const { config, save, saving, error: configError } = useConfig();
   const action = useAction();
   const discord = useDiscord();
+  const tunnel = useTunnel();
   const [identityNote, setIdentityNote] = useState(false);
 
   async function newIdentity() {
@@ -37,8 +40,9 @@ export default function App() {
         status={status}
         discord={discord.status}
         discordLoading={discord.loading}
+        tunnel={tunnel.status}
         config={config}
-        onFinish={() => void save({ ...config, onboarded: true })}
+        onFinish={() => save({ ...config, onboarded: true })}
       />
     );
   }
@@ -78,6 +82,13 @@ export default function App() {
           status={discord.status}
           loading={discord.loading}
           connected={status.phase === "connected"}
+          config={config}
+          onSave={(next) => void save(next)}
+        />
+
+        <Tunnel
+          status={tunnel.status}
+          loading={tunnel.loading}
           config={config}
           onSave={(next) => void save(next)}
         />

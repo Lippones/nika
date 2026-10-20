@@ -22,6 +22,7 @@ mod state;
 mod supervisor;
 mod torrc;
 mod tray;
+mod tunnel;
 mod window;
 
 use tauri::{Manager, RunEvent, WindowEvent};
@@ -32,9 +33,12 @@ use crate::discord::DiscordStore;
 use crate::logs::LogBuffer;
 use crate::paths::Paths;
 use crate::state::{AppState, ControlSlot, StatusStore};
+use crate::tunnel::TunnelStore;
 
 /// Argumento com que o Windows nos chama pela chave `Run` (RF-21).
 pub const AUTOSTART_FLAG: &str = "--autostart";
+
+pub use tunnel::{wait_for_pid, AFTER_PID_FLAG};
 
 pub fn run() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
@@ -72,6 +76,13 @@ pub fn run() {
             commands::discord_install,
             commands::discord_uninstall,
             commands::discord_relaunch,
+            commands::tunnel_status,
+            commands::tunnel_preview,
+            commands::tunnel_import,
+            commands::tunnel_forget,
+            commands::tunnel_start,
+            commands::tunnel_stop,
+            commands::relaunch_elevated,
             commands::copy_text,
             commands::hide_window,
             commands::minimize_window,
@@ -84,7 +95,13 @@ pub fn run() {
             if let RunEvent::Exit = event {
                 if let Some(state) = app.try_state::<AppState>() {
                     let supervisor = state.supervisor.clone();
-                    tauri::async_runtime::block_on(supervisor.shutdown());
+                    let tunnel = state.tunnel.clone();
+                    tauri::async_runtime::block_on(async move {
+                        // RF-58: fechar os handles do WinDivert antes de sair
+                        // descarrega o driver de forma limpa.
+                        let _ = tunnel.stop().await;
+                        supervisor.shutdown().await;
+                    });
                 }
             }
         });
@@ -139,14 +156,20 @@ fn setup(app: &mut tauri::App) -> std::result::Result<(), Box<dyn std::error::Er
     );
 
     let discord = DiscordStore::new(handle.clone());
+    let tunnel = TunnelStore::new(
+        handle.clone(),
+        paths.tunnel_profile.clone(),
+        paths.windivert_dir.clone(),
+    );
 
     app.manage(AppState {
         config: config.clone(),
         status: status.clone(),
-        logs,
+        logs: logs.clone(),
         control,
         supervisor: supervisor.clone(),
         discord: discord.clone(),
+        tunnel: tunnel.clone(),
     });
 
     tray::build(&handle)?;
@@ -175,6 +198,24 @@ fn setup(app: &mut tauri::App) -> std::result::Result<(), Box<dyn std::error::Er
         tauri::async_runtime::spawn_blocking(move || {
             if let Err(err) = reapply_discord(&handle, &settings, &discord) {
                 log::warn!("revalidação do proxy do Discord falhou: {err}");
+            }
+        });
+    }
+
+    // RF-51/RF-56: a instância elevada nasce com `--tunnel` porque o usuário
+    // aceitou o UAC para isso; `autoStart` cobre quem já abre o Nika elevado.
+    // Sem elevação não há o que fazer no boot — a faixa oferece o botão.
+    let wants_tunnel = std::env::args().any(|arg| arg == tunnel::START_FLAG)
+        || (settings.tunnel.auto_start && tunnel::is_elevated());
+    if wants_tunnel && tunnel.has_profile() {
+        let tunnel = tunnel.clone();
+        tauri::async_runtime::spawn(async move {
+            match tunnel.start().await {
+                Ok(_) => logs.push("[nika] saída própria do Discord ligada"),
+                Err(err) => {
+                    logs.push(format!("[nika] não consegui ligar a saída própria: {err}"));
+                    log::error!("túnel no boot falhou: {err}");
+                }
             }
         });
     }

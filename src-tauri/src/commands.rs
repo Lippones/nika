@@ -12,6 +12,7 @@ use crate::control::info::{self, Circuit, Traffic};
 use crate::discord::{self, DiscordStatus, Mode};
 use crate::error::{Error, Result};
 use crate::state::{AppState, Phase, TorStatus};
+use crate::tunnel::{profile::ProfileSummary, TunnelStatus, TunnelStore};
 
 #[tauri::command]
 pub fn get_status(state: State<'_, AppState>) -> TorStatus {
@@ -267,6 +268,50 @@ fn reopen(installs: &[discord::Install]) {
             log::warn!("não consegui reabrir o {}: {err}", install.label);
         }
     }
+}
+
+// ============================ Túnel (docs/discord-tunnel.md §7.3) ==========
+
+#[tauri::command]
+pub fn tunnel_status(state: State<'_, AppState>) -> TunnelStatus {
+    state.tunnel.status()
+}
+
+/// Resumo do convite colado, sem gravar: é o que a faixa mostra ao vivo.
+#[tauri::command]
+pub fn tunnel_preview(text: String) -> Result<ProfileSummary> {
+    TunnelStore::preview(&text)
+}
+
+/// RF-50. O texto é o `.conf` ou o convite de uma linha; a validação acontece
+/// antes de gravar.
+#[tauri::command]
+pub fn tunnel_import(state: State<'_, AppState>, text: String) -> Result<TunnelStatus> {
+    state.tunnel.import(&text)
+}
+
+/// RF-60.
+#[tauri::command]
+pub fn tunnel_forget(state: State<'_, AppState>) -> Result<TunnelStatus> {
+    state.tunnel.forget()
+}
+
+#[tauri::command]
+pub async fn tunnel_start(state: State<'_, AppState>) -> Result<TunnelStatus> {
+    actions::tunnel_start(&state).await?;
+    Ok(state.tunnel.status())
+}
+
+#[tauri::command]
+pub async fn tunnel_stop(state: State<'_, AppState>) -> Result<TunnelStatus> {
+    actions::tunnel_stop(&state).await?;
+    Ok(state.tunnel.status())
+}
+
+/// RF-56.
+#[tauri::command]
+pub async fn relaunch_elevated(app: AppHandle, state: State<'_, AppState>) -> Result<()> {
+    actions::relaunch_elevated(app, &state).await
 }
 
 /// RF-08. A cópia passa pelo core para o webview não precisar de permissão de

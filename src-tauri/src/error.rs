@@ -43,6 +43,26 @@ pub enum Error {
     #[error("não consegui gravar em: {paths}")]
     DiscordWriteFailed { paths: String },
 
+    // --- túnel (docs/discord-tunnel.md §7.4) ---
+    #[error("o perfil WireGuard é inválido: {0}")]
+    TunnelProfile(String),
+
+    #[error("nenhum perfil WireGuard importado — cole o .conf gerado pelo nika-peer")]
+    TunnelNoProfile,
+
+    #[error("o túnel precisa de permissão de administrador — reabra o Nika como administrador")]
+    NeedsElevation,
+
+    #[error("o componente do túnel (WinDivert) não foi incluído neste build")]
+    TunnelComponentMissing,
+
+    #[error("o túnel só funciona no Windows")]
+    TunnelUnsupported,
+
+    #[error("WinDivert: {0}")]
+    #[cfg_attr(not(windows), allow(dead_code))]
+    Divert(String),
+
     #[error("erro de E/S: {0}")]
     Io(#[from] std::io::Error),
 

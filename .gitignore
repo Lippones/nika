@@ -15,6 +15,12 @@ src-tauri/resources/*
 !src-tauri/resources/discord/
 !src-tauri/resources/discord/.gitkeep
 src-tauri/resources/discord/version.dll
+# Idem para o WinDivert (túnel do Discord): a pasta existe, os binários vêm de
+# scripts/fetch-windivert.* e ficam fora do git (docs/discord-tunnel.md T-11).
+!src-tauri/resources/windivert/
+!src-tauri/resources/windivert/.gitkeep
+src-tauri/resources/windivert/*
+!src-tauri/resources/windivert/.gitkeep
 
 # target do shim (crate fora do workspace)
 src-tauri/discord-shim/target/

@@ -59,6 +59,8 @@ mod tests {
             config_file: PathBuf::from("/app/config.json"),
             geoip: None,
             geoip6: None,
+            tunnel_profile: PathBuf::from("/app/tunnel.conf"),
+            windivert_dir: None,
         }
     }
 

@@ -8,9 +8,10 @@
 //!   torrc                gerado a cada start (§8.2 do PRD)
 //!   tor\                 DataDirectory do tor
 //!     control_auth_cookie
+//!   tunnel.conf          perfil WireGuard importado (contém a chave privada)
 //! ```
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use tauri::path::BaseDirectory;
 use tauri::{AppHandle, Manager};
@@ -30,6 +31,11 @@ pub struct Paths {
     /// Bases de GeoIP do bundle; ausentes se o bundle não foi baixado.
     pub geoip: Option<PathBuf>,
     pub geoip6: Option<PathBuf>,
+    /// Perfil WireGuard do túnel (docs/discord-tunnel.md T-10).
+    pub tunnel_profile: PathBuf,
+    /// Pasta com `WinDivert.dll` + `WinDivert64.sys`; `None` se o build não
+    /// trouxe o driver (T-07) — a UI mostra "componente ausente".
+    pub windivert_dir: Option<PathBuf>,
 }
 
 impl Paths {
@@ -43,6 +49,10 @@ impl Paths {
             config_file: root.join("config.json"),
             geoip: resource(app, "resources/geoip"),
             geoip6: resource(app, "resources/geoip6"),
+            tunnel_profile: root.join(crate::tunnel::PROFILE_FILE),
+            windivert_dir: resource(app, "resources/windivert/WinDivert.dll")
+                .filter(|dll| dll.with_file_name("WinDivert64.sys").is_file())
+                .and_then(|dll| dll.parent().map(Path::to_path_buf)),
             tor_data,
         })
     }

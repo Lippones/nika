@@ -28,6 +28,16 @@ pub struct DiscordConfig {
     pub allow_close: bool,
 }
 
+/// Preferências do túnel (docs/discord-tunnel.md §7.2). O perfil em si mora
+/// em `tunnel.conf`, fora daqui (T-10).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase", default)]
+pub struct TunnelConfig {
+    /// Ligar o túnel ao abrir o Nika, se houver perfil e o processo for
+    /// administrador. Sem elevação a faixa só avisa — nada de UAC no boot.
+    pub auto_start: bool,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct Config {
@@ -39,6 +49,7 @@ pub struct Config {
     /// Conectar sozinho ao abrir (RF-23).
     pub auto_connect: bool,
     pub discord: DiscordConfig,
+    pub tunnel: TunnelConfig,
     /// A janela de boas-vindas já foi vista e concluída. `false` no primeiro
     /// start (config nova ou vinda da v1, onde o campo não existe e o
     /// `serde(default)` o preenche): a UI abre no onboarding, não na janela.
@@ -54,6 +65,7 @@ impl Default for Config {
             autostart: false,
             auto_connect: true,
             discord: DiscordConfig::default(),
+            tunnel: TunnelConfig::default(),
             onboarded: false,
         }
     }
